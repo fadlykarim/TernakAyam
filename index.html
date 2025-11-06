@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petok Predict - Kalkulator Perhitungan Ayam Profesional</title>
+    <meta name="description" content="Petok Predict: Sistem kalkulasi perhitungan ayam untuk analisis keuntungan peternakan dengan data harga real-time">
+    <meta name="keywords" content="petok predict, kalkulator ayam, perhitungan ayam, peternakan, analisis keuntungan, broiler, ayam kampung">
+    <meta name="author" content="Petok Predict">
+    <link rel="canonical" href="https://petokpredict.me/">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Petok Predict - Kalkulator Perhitungan Ayam Profesional">
+    <meta property="og:description" content="Sistem kalkulasi perhitungan ayam profesional dengan analisis keuntungan real-time">
+    <meta property="og:image" content="https://petokpredict.me/petokpredict.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://petokpredict.me/">
+    <meta property="og:site_name" content="Petok Predict">
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Petok Predict - Kalkulator Perhitungan Ayam Profesional">
+    <meta name="twitter:description" content="Hitung potensi profit peternakan ayam dengan data harga real-time. Gratis dan cepat.">
+    <meta name="twitter:image" content="https://petokpredict.me/petokpredict.png">
+    
+    <!-- Language -->
+    <link rel="alternate" hreflang="id" href="https://petokpredict.me/">
+    <link rel="alternate" hreflang="x-default" href="https://petokpredict.me/">
+    
+    <!-- Favicon -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://accounts.google.com" crossorigin>
+    <link rel="preconnect" href="https://js.hcaptcha.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" href="petokpredict.png" type="image/png">
+    <link rel="apple-touch-icon" href="petokpredict.png">
+    <link rel="shortcut icon" href="petokpredict.png" type="image/png">
+    
+        <!-- Normalize unexpected paths to root so the URL becomes '/' on unknown routes -->
+        <script>
+            (function(){
+                try {
+                    var p = window.location.pathname || '/';
+                    // Keep API and the root as-is; anything else gets normalized to '/'
+                    if (p !== '/' && !p.startsWith('/api/')) {
+                        history.replaceState(null, '', '/');
+                    }
+                } catch (e) { /* noop */ }
+            })();
+        </script>
+    
+    <!-- External Libraries -->
+        <!-- jsPDF for export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- hCaptcha -->
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Google Identity Services -->
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+        <!-- Structured Data -->
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "Petok Predict",
+            "url": "https://petokpredict.me/",
+            "logo": "https://petokpredict.me/petokpredict.png"
+        }
+        </script>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "Petok Predict",
+            "url": "https://petokpredict.me/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://petokpredict.me/?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+        </script>
+        <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {
+                    "@type": "Question",
+                    "name": "Apa itu Petok Predict?",
+                    "acceptedAnswer": {"@type": "Answer", "text": "Kalkulator perhitungan ayam profesional untuk membantu peternak menghitung biaya, pendapatan, dan profit berdasarkan asumsi produksi dan data harga real-time."}
+                },
+                {
+                    "@type": "Question",
+                    "name": "Apakah gratis digunakan?",
+                    "acceptedAnswer": {"@type": "Answer", "text": "Ya, kalkulator dapat digunakan gratis. Login opsional untuk menyimpan riwayat dan profil."}
+                },
+                {
+                    "@type": "Question",
+                    "name": "Bagaimana jika sedang offline?",
+                    "acceptedAnswer": {"@type": "Answer", "text": "Jika harga pasar tidak tersedia (offline), bagian simulasi menampilkan tanda — dan tidak menggunakan angka fallback, untuk menjaga akurasi."}
+                }
+            ]
+        }
+        </script>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <div class="hero">
+                <div class="brand">
+                    <img src="petokpredict.png" alt="PetokPredict Logo" class="logo" width="70" height="70">
+                    <div class="brand-copy">
+                        <span class="brand-eyebrow">Peternakan berbasis data</span>
+                        <h1>Petok Predict</h1>
+                        <p class="brand-lead">Atur asumsi panen, pantau biaya, dan hitung potensi profit tanpa ribet.</p>
+                    </div>
+                </div>
+                <div class="auth-area">
+                    <!-- Login Button - Content will be replaced by Google -->
+                    <div id="login-btn" class="google-signin-container"></div>
+
+                    <!-- User Info Box (shown when logged in) -->
+                    <div id="user-box" class="user-box" style="display: none;">
+                        <img id="user-avatar" class="user-avatar profile-trigger" alt="Foto Profil" style="display: none;" role="button" tabindex="0">
+                        <div class="user-info">
+                            <span>Halo, <span id="user-name">User</span></span>
+                        </div>
+                        <button id="logout-btn" class="auth-btn logout-btn">Keluar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-footnote">
+                <p>Harga pasar di-update otomatis, biaya tambahan disesuaikan populasi, dan semua perhitungan tetap akurat seperti sebelumnya.</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Dashboard Kalkulasi -->
+            <section class="dashboard">
+                <div class="dash-header">
+                    <div>
+                        <h2>Rangkuman Usaha Ayam Kamu</h2>
+                        <p class="muted">Panel ringkas untuk membaca performa kandang tiap periode panen tanpa perlu bongkar spreadsheet.</p>
+                        <small class="helper-text">
+                            Semua biaya rutin—vaksin, vitamin, sampai listrik—langsung menyesuaikan populasi dan asumsi panen terbaru.
+                            <span id="saveInfo" class="helper-success" style="display: none;">
+                                • Simpan kalkulasi ke riwayat kapan pun butuh bahan diskusi.
+                            </span>
+                        </small>
+                    </div>
+                    <div class="dash-actions">
+                        <button id="saveCalculation" class="btn-action accent" style="display: none;">
+                            💾 Simpan Kalkulasi
+                        </button>
+                        <button id="viewHistory" class="btn-action" style="display: none;">
+                            📊 History
+                        </button>
+                        <button id="exportPdfDashboard" class="btn-action ghost">
+                            📄 Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dash-controls">
+                    <div class="input-group">
+                        <label for="chickenType">Jenis Ayam</label>
+                        <div class="tab-buttons" id="chickenTabs">
+                            <button type="button" class="tab-btn active" data-type="kampung">Ayam Kampung</button>
+                            <button type="button" class="tab-btn" data-type="broiler">Broiler</button>
+                        </div>
+                        <select id="chickenType" hidden>
+                            <option value="kampung">Ayam Kampung</option>
+                            <option value="broiler">Broiler</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Market Info Group -->
+                <div class="card-group single">
+                    <div class="stat-card info">
+                        <p class="stat-title">Harga Pasar</p>
+                        <p class="stat-value" id="statJenis">Ayam Kampung</p>
+                        <p class="stat-value" id="statHarga">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Revenue Group -->
+                <div class="card-group">
+                    <div class="stat-card revenue">
+                        <p class="stat-title">Total Pendapatan</p>
+                        <p class="stat-value" id="statPendapatan">–</p>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" id="pendapatanProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card primary">
+                        <p class="stat-title">Keuntungan Bersih</p>
+                        <p class="stat-value" id="statKeuntungan">–</p>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" id="keuntunganProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <p class="stat-title">Ekor Panen</p>
+                        <p class="stat-value" id="statEkorPanen">–</p>
+                        <small>Survival rate calculation</small>
+                    </div>
+                </div>
+
+                <!-- Cost Breakdown Group -->
+                <div class="card-group">
+                    <div class="stat-card cost">
+                        <p class="stat-title">Biaya DOC</p>
+                        <p class="stat-value" id="statBiayaDoc">–</p>
+                    </div>
+                    <div class="stat-card cost">
+                        <p class="stat-title">Biaya Pakan/Ekor</p>
+                        <p class="stat-value" id="statBiayaPakanEkor">–</p>
+                    </div>
+                    <div class="stat-card cost">
+                        <p class="stat-title">Biaya Tambahan</p>
+                        <p class="stat-value" id="statBiayaTambahan">–</p>
+                        <small>Vaksin, energi, tenaga kerja, overhead, transport</small>
+                    </div>
+                    <div class="stat-card cost">
+                        <p class="stat-title">Total Biaya</p>
+                        <p class="stat-value" id="statTotalBiaya">–</p>
+                        <div class="stat-progress">
+                            <div class="stat-progress-bar" id="biayaProgress" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-group" id="advancedStats" style="display:none">
+                    <div class="stat-card info">
+                        <p class="stat-title">Biaya / kg Hidup</p>
+                        <p class="stat-value" id="statCostPerKg">–</p>
+                        <small>Semakin rendah semakin efisien</small>
+                    </div>
+                    <div class="stat-card info">
+                        <p class="stat-title">Break-even Price</p>
+                        <p class="stat-value" id="statBreakEven">–</p>
+                        <small>Harga minimum agar impas</small>
+                    </div>
+                    <div class="stat-card info">
+                        <p class="stat-title">EPEF</p>
+                        <p class="stat-value" id="statEpef">–</p>
+                        <small>Efisiensi produksi ayam pedaging</small>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Card: Asumsi Produksi (Sliders) -->
+            <section class="dashboard">
+                <div class="dash-header">
+                    <div>
+                        <h2 id="secondaryCardTitle">Asumsi Produksi</h2>
+                        <p class="muted">Geser slider untuk menyesuaikan parameter. Rangkuman biaya & keuntungan di kartu atas akan ter-update otomatis.</p>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="asumsi" id="tabAsumsi">Asumsi Produksi</button>
+                        <button class="tab-btn" data-tab="simulasi" id="tabSimulasi">Simulasi Skenario</button>
+                    </div>
+                    <div class="tab-content active" id="tabAsumsiContent">
+                      <div class="form-grid">
+                    <div class="input-group">
+                        <div class="slider-header"><label>Populasi</label><span class="slider-value" id="valPopulasi">100</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangePopulasi" min="50" max="1000" step="10" value="100" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-header"><label>Survival (%)</label><span class="slider-value" id="valSurvival">95</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangeSurvival" min="70" max="100" step="1" value="95" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-header"><label>Bobot Panen (kg)</label><span class="slider-value" id="valBobot">1.00</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangeBobot" min="0.8" max="1.4" step="0.02" value="1.00" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-header"><label>Harga Pakan/sak 50kg</label><span class="slider-value" id="valHargaPakan">Rp 400.000</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangeHargaPakan" min="300000" max="650000" step="5000" value="400000" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-header"><label>FCR</label><span class="slider-value" id="valFCR">2.30</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangeFCR" min="1.6" max="3.0" step="0.05" value="2.30" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="slider-header"><label>DOC/Ekor (Rp)</label><span class="slider-value" id="valDocPrice">Rp 8.000</span></div>
+                        <div class="slider-wrap">
+                            <input type="range" id="rangeDocPrice" min="5000" max="15000" step="250" value="8000" />
+                        </div>
+                        <small>Harga anak ayam pedaging per ekor</small>
+                    </div>
+                      </div>
+
+                                            <div class="advanced-toggle-row" id="advancedToggleRow">
+                                                <div class="advanced-toggle-copy">
+                                                        <label for="advancedModeSwitch">Mode Advance</label>
+                                                        <small>Aktifkan untuk buka parameter lanjutan + rekomendasi AI.</small>
+                                                </div>
+                                                <button type="button" id="advancedModeSwitch" class="toggle-switch" aria-pressed="false" aria-label="Toggle mode advance">
+                                                        <span class="toggle-switch-thumb"></span>
+                                                </button>
+                                            </div>
+
+                      <div id="advancedBanner" class="advanced-banner" style="display:none">
+                        Mode advance aktif. Parameter lanjutan tersedia di bawah untuk penyesuaian detail biaya.
+                      </div>
+                      <div id="advancedControls" class="form-grid advanced-grid" style="display:none">
+                        <div class="input-group">
+                            <label>Basis Harga Pasar</label>
+                            <div class="basis-switch" id="basisSwitch">
+                                <button type="button" class="basis-btn active" data-basis="live">Live Bird</button>
+                                <button type="button" class="basis-btn" data-basis="carcass">Karkas</button>
+                            </div>
+                            <small>Live: harga per kg bobot hidup. Karkas: butuh dressing % & biaya proses.</small>
+                        </div>
+                        <div class="input-group advanced-only" data-basis="carcass" style="display:none">
+                            <div class="slider-header"><label>Dressing Yield (%)</label><span class="slider-value" id="valDressing">72</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeDressing" min="55" max="85" step="1" value="72" />
+                            </div>
+                        </div>
+                        <div class="input-group advanced-only" data-basis="carcass" style="display:none">
+                            <div class="slider-header"><label>Biaya Proses/Ekor (Rp)</label><span class="slider-value" id="valProcessCost">Rp 1.500</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeProcessCost" min="0" max="6000" step="100" value="1500" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Umur Panen (hari)</label><span class="slider-value" id="valHarvestAge">35</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeHarvestAge" min="20" max="120" step="1" value="35" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Wastage Pakan (%)</label><span class="slider-value" id="valWastage">3.0%</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeWastage" min="0" max="15" step="0.5" value="3" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Shrinkage Transport (%)</label><span class="slider-value" id="valShrinkage">2.0%</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeShrinkage" min="0" max="10" step="0.5" value="2" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Tenaga Kerja / Siklus</label><span class="slider-value" id="valLaborCost">Rp 300.000</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeLaborCost" min="0" max="5000000" step="50000" value="300000" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Overhead / Siklus</label><span class="slider-value" id="valOverheadCost">Rp 200.000</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeOverheadCost" min="0" max="5000000" step="50000" value="200000" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Transport & Komisi</label><span class="slider-value" id="valTransportCost">Rp 150.000</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeTransportCost" min="0" max="3000000" step="50000" value="150000" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Biaya Pemanas & Listrik</label><span class="slider-value" id="valHeatingCost">Rp 0</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeHeatingCost" min="0" max="5000000" step="50000" value="0" />
+                            </div>
+                            <small id="heatingHint">Angka awal mengikuti rekomendasi sistem.</small>
+                        </div>
+                        <div class="input-group">
+                            <div class="slider-header"><label>Biaya Vaksin & Obat</label><span class="slider-value" id="valVaccineCost">Rp 100.000</span></div>
+                            <div class="slider-wrap">
+                                <input type="range" id="rangeVaccineCost" min="0" max="3000000" step="25000" value="100000" />
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Catatan Rekomendasi</label>
+                            <textarea id="advancedNotes" rows="3" readonly class="advanced-notes"></textarea>
+                            <div class="advanced-actions">
+                                <button type="button" id="openAdvancedConfigurator" class="btn-ghost">⚙️ Profil Kandang</button>
+                                <button type="button" id="regenAdvice" class="btn-regen">🔄 Regenerasi rekomendasi</button>
+                            </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="tab-content" id="tabSimulasiContent">
+                        <div id="simCards" class="sim-grid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Mengambil data harga terbaru...</p>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-content">
+                <div>
+                    <p class="footer-title">Tetap pegang kendali atas kandangmu.</p>
+                    <p class="footer-copy">&copy; 2025 Petok Predict. Data harga bersumber dari partner terpercaya dan diperbarui berkala.</p>
+                </div>
+                <p class="footer-note">Butuh saran fitur? Tinggalkan catatan saat menyimpan kalkulasi—kami membaca semuanya.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
