@@ -1043,6 +1043,7 @@ class ChickenCalc {
         this.setText('statBiayaPakanEkor', this.fmt(result.feedCostPerBird));
         this.setText('statBiayaTambahan', this.fmt(result.extraCost));
         this.setText('statEkorPanen', `${result.harvest.toLocaleString('id-ID')} ekor`);
+        this.setText('statHarvestEstimate', `${result.harvestAge} hari`);
         this.setText('statTotalBiaya', this.fmt(result.totalCost));
         this.setText('statPendapatan', result.revenue != null ? this.fmt(result.revenue) : 'Menunggu harga');
         this.setText('statKeuntungan', result.profit != null ? this.fmt(result.profit) : 'Menunggu harga');
