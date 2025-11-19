@@ -916,15 +916,26 @@ class ChickenCalc {
         const priceInput = options.price ?? (typeof this.price?.price === 'number' ? this.price.price : null);
         const priceValid = typeof priceInput === 'number' && priceInput > 0;
 
+        // Biological estimation of harvest age based on FCR & Weight (Refined by Expert)
+        // Broiler: 20 + (Weight * 8) + ((FCR - 1.6) * 4)
+        // Kampung: 45 + (Weight * 30) + ((FCR - 2.8) * 5)
+        const bioAge = isBroiler 
+            ? 20 + (weight * 8) + ((fcr - 1.6) * 4)
+            : 45 + (weight * 30) + ((fcr - 2.8) * 5);
+        const predictedHarvestAge = Math.max(20, Math.round(bioAge));
+
         const advancedActive = !!this.advanced?.enabled;
         const wastagePct = advancedActive
             ? Math.max(0, Number(this.advanced.wastagePct ?? 0))
             : (isBroiler ? 0.05 : 0);
         const shrinkagePct = advancedActive ? Math.max(0, Number(this.advanced.shrinkagePct ?? 0)) : 0;
         const shrinkageFactor = Math.max(0, 1 - shrinkagePct);
+        
+        // Use advanced setting if active, otherwise use predicted biological age
         const harvestAge = advancedActive
-            ? Math.max(1, Math.round(this.advanced.harvestAge || (isBroiler ? 35 : 70)))
-            : (isBroiler ? 35 : 70);
+            ? Math.max(1, Math.round(this.advanced.harvestAge || predictedHarvestAge))
+            : predictedHarvestAge;
+
         const basis = advancedActive && this.advanced.basis === 'carcass' ? 'carcass' : 'live';
         const dressing = basis === 'carcass'
             ? Math.min(Math.max(Number(this.advanced.dressing ?? 0.72), 0.45), 0.9)
@@ -1020,6 +1031,7 @@ class ChickenCalc {
             shrinkagePct,
             shrinkageFactor,
             harvestAge,
+            predictedHarvestAge,
             costPerKg,
             breakEven,
             epef,
@@ -1043,7 +1055,7 @@ class ChickenCalc {
         this.setText('statBiayaPakanEkor', this.fmt(result.feedCostPerBird));
         this.setText('statBiayaTambahan', this.fmt(result.extraCost));
         this.setText('statEkorPanen', `${result.harvest.toLocaleString('id-ID')} ekor`);
-        this.setText('statHarvestEstimate', `${result.harvestAge} hari`);
+        this.setText('statHarvestEstimate', `${result.predictedHarvestAge} hari`);
         this.setText('statTotalBiaya', this.fmt(result.totalCost));
         this.setText('statPendapatan', result.revenue != null ? this.fmt(result.revenue) : 'Menunggu harga');
         this.setText('statKeuntungan', result.profit != null ? this.fmt(result.profit) : 'Menunggu harga');
