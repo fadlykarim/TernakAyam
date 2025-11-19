@@ -1,33 +1,26 @@
-﻿(() => {
+(() => {
 'use strict';
 
 // ========================================
 // PETOK PREDICT - CLEAN & SIMPLE
 // ========================================
 
-// Config will be loaded from Netlify Functions (secure)
 let CONFIG = null;
 let configLoaded = false;
-
 let supabaseClient = null;
 let googleAuthReady = false;
 let googleButtonRendered = false;
 let captchaWidgetId = null;
-const ensuredProfiles = new Set();
 
 // Load config from Netlify Function
 async function loadConfig() {
     if (configLoaded) return CONFIG;
-    
     try {
         const response = await fetch('/api/config');
         if (!response.ok) throw new Error('Failed to load config');
         CONFIG = await response.json();
-        
-        // Initialize Supabase client with loaded config
         supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
         configLoaded = true;
-        
         return CONFIG;
     } catch (error) {
         console.error('Config load failed:', error);
@@ -36,19 +29,13 @@ async function loadConfig() {
     }
 }
 
-// Getter for Supabase client
 function getSb() {
-    if (!supabaseClient) {
-        throw new Error('Supabase client not initialized. Call loadConfig() first.');
-    }
+    if (!supabaseClient) throw new Error('Supabase client not initialized.');
     return supabaseClient;
 }
 
 function deriveUserIdentity(user) {
-    if (!user) {
-        return { fullName: '', email: '', picture: null };
-    }
-
+    if (!user) return { fullName: '', email: '', picture: null };
     const metadata = user.user_metadata || {};
     const nameCandidates = [
         metadata.full_name,
@@ -57,52 +44,11 @@ function deriveUserIdentity(user) {
         user.email ? user.email.split('@')[0] : ''
     ].filter(Boolean);
 
-    const picture = metadata.avatar_url
-        || metadata.picture
-        || metadata.image
-        || metadata.avatar
-        || null;
-
     return {
         fullName: nameCandidates[0] || '',
         email: user.email || '',
-        picture
+        picture: metadata.avatar_url || metadata.picture || metadata.image || metadata.avatar || null
     };
-}
-
-function escapeAttr(value) {
-    return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
-async function ensureProfileRow(user) {
-    if (!user || ensuredProfiles.has(user.id)) {
-        return;
-    }
-
-    const sb = getSb();
-    const identity = deriveUserIdentity(user);
-
-    try {
-        const payload = {
-            id: user.id,
-            email: user.email || null,
-            full_name: identity.fullName || null,
-            avatar_url: identity.picture || null
-        };
-
-        const { error } = await sb
-            .from('profiles')
-            .upsert(payload, { onConflict: 'id' });
-
-        if (error) throw error;
-        ensuredProfiles.add(user.id);
-    } catch (error) {
-        console.warn('Ensure profile failed', error);
-    }
 }
 
 // ========================================
@@ -111,7 +57,6 @@ async function ensureProfileRow(user) {
 
 async function initGoogleAuth() {
     await loadConfig();
-    
     if (!CONFIG || CONFIG.googleClientId.includes('YOUR_')) return;
 
     const loginContainer = document.getElementById('login-btn');
@@ -139,59 +84,36 @@ async function initGoogleAuth() {
             cancel_on_tap_outside: false
         });
 
-        // Render Google button only once
         if (!googleButtonRendered) {
-            google.accounts.id.renderButton(
-                loginContainer,
-                {
-                    theme: 'filled_blue',
-                    size: 'large',
-                    text: 'signin_with',
-                    width: 240,
-                    logo_alignment: 'left'
-                }
-            );
+            google.accounts.id.renderButton(loginContainer, {
+                theme: 'filled_blue',
+                size: 'large',
+                text: 'signin_with',
+                width: 240,
+                logo_alignment: 'left'
+            });
             googleButtonRendered = true;
         }
     };
 
     if (window.google?.accounts?.id) {
         setup();
-        return;
-    }
-
-    const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-    if (gisScript) {
-        gisScript.addEventListener('load', setup, { once: true });
+    } else {
+        const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+        if (gisScript) gisScript.addEventListener('load', setup, { once: true });
     }
 }
 
 async function logout() {
-    const cachedUser = (() => {
-        try {
-            return JSON.parse(localStorage.getItem('pp_user') || 'null');
-        } catch (_) {
-            return null;
-        }
-    })();
-
     try {
         applyAuthState(null);
         const sb = getSb();
-        const { error } = await sb.auth.signOut();
-        if (error) throw error;
-
+        await sb.auth.signOut();
         if (window.google?.accounts?.id) {
-            const revokeFn = google.accounts.id.revoke;
-            if (cachedUser?.email && typeof revokeFn === 'function') {
-                revokeFn(cachedUser.email, () => {});
-            } else {
-                google.accounts.id.disableAutoSelect();
-            }
+            google.accounts.id.disableAutoSelect();
         }
     } catch (e) {
         console.error('Logout failed', e);
-        alert('Logout gagal: ' + (e?.message || 'Tidak diketahui'));
     } finally {
         updateAuthUI();
     }
@@ -214,72 +136,49 @@ function applyAuthState(session) {
         if (userAvatar) {
             if (identity.picture) {
                 userAvatar.src = identity.picture;
-                userAvatar.alt = identity.fullName || session.user.email || 'Foto Profil';
                 userAvatar.style.display = 'block';
-                if (userBox) userBox.classList.add('has-avatar');
+                userBox.classList.add('has-avatar');
             } else {
-                userAvatar.removeAttribute('src');
                 userAvatar.style.display = 'none';
-                if (userBox) userBox.classList.remove('has-avatar');
+                userBox.classList.remove('has-avatar');
             }
         }
         if (saveBtn) saveBtn.style.display = 'inline-block';
         if (historyBtn) historyBtn.style.display = 'inline-block';
         if (saveInfo) saveInfo.style.display = 'inline';
-        localStorage.setItem('pp_user', JSON.stringify({
-            id: session.user.id,
-            email: session.user.email,
-            name: identity.fullName || session.user.email,
-            avatar: identity.picture || null
-        }));
+        localStorage.setItem('pp_user', JSON.stringify({ id: session.user.id }));
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
-            // Re-render button on logout only if not already rendered
             if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
                 loginContainer.innerHTML = '';
-                google.accounts.id.renderButton(
-                    loginContainer,
-                    {
-                        theme: 'filled_blue',
-                        size: 'large',
-                        text: 'signin_with',
-                        width: 240,
-                        logo_alignment: 'left'
-                    }
-                );
+                google.accounts.id.renderButton(loginContainer, {
+                    theme: 'filled_blue',
+                    size: 'large',
+                    text: 'signin_with',
+                    width: 240,
+                    logo_alignment: 'left'
+                });
                 googleButtonRendered = true;
             }
         }
         if (userBox) userBox.style.display = 'none';
-        if (userAvatar) {
-            userAvatar.removeAttribute('src');
-            userAvatar.style.display = 'none';
-        }
-        if (userBox) userBox.classList.remove('has-avatar');
         if (saveBtn) saveBtn.style.display = 'none';
         if (historyBtn) historyBtn.style.display = 'none';
         if (saveInfo) saveInfo.style.display = 'none';
         localStorage.removeItem('pp_user');
     }
+    document.body.classList.add('auth-ready');
+}
 
-    if (document.body && !document.body.classList.contains('auth-ready')) {
-        document.body.classList.add('auth-ready');
-    }
-}async function updateAuthUI(sessionOverride) {
+async function updateAuthUI(sessionOverride) {
     if (sessionOverride !== undefined) {
         applyAuthState(sessionOverride);
-        if (sessionOverride?.user) {
-            await ensureProfileRow(sessionOverride.user);
-        }
         return;
     }
     const sb = getSb();
     const { data: { session } } = await sb.auth.getSession();
     applyAuthState(session);
-    if (session?.user) {
-        await ensureProfileRow(session.user);
-    }
 }
 
 // ========================================
@@ -289,6 +188,7 @@ function applyAuthState(session) {
 class ChickenCalc {
     constructor() {
         this.price = null;
+        this.priceOverride = { market: null };
         this.assumptions = {
             pop: 100,
             survival: 0.95,
@@ -298,7 +198,6 @@ class ChickenCalc {
             doc: 8000
         };
         this.advanced = this.loadAdvancedSettings();
-        this.profileLoading = false;
         this.activeTab = 'asumsi';
         this.init();
     }
@@ -325,21 +224,7 @@ class ChickenCalc {
                     overheadCost: saved.overheadCost ?? 200000,
                     transportCost: saved.transportCost ?? 150000,
                     heatingCost: saved.heatingCost ?? 0,
-                    vaccineCost: saved.vaccineCost ?? 100000,
-                    electricityCost: saved.electricityCost ?? 0,
-                    notes: saved.notes || '',
-                    farmSize: saved.farmSize || 'small',
-                    custom: saved.custom || {
-                        length: null,
-                        width: null,
-                        height: null,
-                        ventilation: null,
-                        extras: []
-                    },
-                    adviceMeta: saved.adviceMeta || {
-                        lastSync: null,
-                        snapshot: null
-                    }
+                    vaccineCost: saved.vaccineCost ?? 100000
                 };
             }
         } catch (e) {
@@ -357,21 +242,7 @@ class ChickenCalc {
             overheadCost: 200000,
             transportCost: 150000,
             heatingCost: 0,
-            vaccineCost: 100000,
-            electricityCost: 0,
-            notes: '',
-            farmSize: 'small',
-            custom: {
-                length: null,
-                width: null,
-                height: null,
-                ventilation: null,
-                extras: []
-            },
-            adviceMeta: {
-                lastSync: null,
-                snapshot: null
-            }
+            vaccineCost: 100000
         };
     }
 
@@ -384,11 +255,14 @@ class ChickenCalc {
         const banner = document.getElementById('advancedBanner');
         const controls = document.getElementById('advancedControls');
         const toggleRow = document.getElementById('advancedToggleRow');
-        if (stats) stats.style.display = this.advanced.enabled ? 'grid' : 'none';
-        if (banner) banner.style.display = this.advanced.enabled ? 'block' : 'none';
-        if (controls) controls.style.display = this.advanced.enabled ? 'grid' : 'none';
+        
+        const isEnabled = this.advanced.enabled;
+        if (stats) stats.style.display = isEnabled ? 'grid' : 'none';
+        if (banner) banner.style.display = isEnabled ? 'block' : 'none';
+        if (controls) controls.style.display = isEnabled ? 'grid' : 'none';
         if (toggleRow) toggleRow.style.display = 'flex';
-        if (!this.advanced.enabled) {
+
+        if (!isEnabled) {
             this.setText('statCostPerKg', '–');
             this.setText('statBreakEven', '–');
             const epefEl = document.getElementById('statEpef');
@@ -401,20 +275,16 @@ class ChickenCalc {
     syncAdvancedControls() {
         if (!this.advanced) return;
         const byId = (id) => document.getElementById(id);
-
         const setSlider = (sliderId, displayId, value, formatter) => {
             const slider = byId(sliderId);
             const display = byId(displayId);
             if (slider) slider.value = value;
             if (display) display.textContent = typeof formatter === 'function' ? formatter(value) : value;
         };
-
         const formatCurrency = (val) => this.fmt(val);
-        const formatPercent = (val) => `${(val * 100).toFixed(1)}%`;
 
-        // Basis buttons visibility
-        const basisSwitch = document.querySelectorAll('#basisSwitch .basis-btn');
-        basisSwitch.forEach(btn => {
+        // Basis buttons
+        document.querySelectorAll('#basisSwitch .basis-btn').forEach(btn => {
             btn?.classList.toggle('active', btn.dataset.basis === this.advanced.basis);
         });
 
@@ -424,9 +294,7 @@ class ChickenCalc {
             el.style.display = this.advanced.enabled && basis === this.advanced.basis ? '' : 'none';
         });
 
-        if (!this.advanced.enabled) {
-            return;
-        }
+        if (!this.advanced.enabled) return;
 
         setSlider('rangeHarvestAge', 'valHarvestAge', this.advanced.harvestAge, (v) => v);
         setSlider('rangeWastage', 'valWastage', this.advanced.wastagePct * 100, (v) => `${Number(v).toFixed(1)}%`);
@@ -438,14 +306,6 @@ class ChickenCalc {
         setSlider('rangeVaccineCost', 'valVaccineCost', this.advanced.vaccineCost, formatCurrency);
         setSlider('rangeDressing', 'valDressing', Math.round(this.advanced.dressing * 100), (v) => `${v}`);
         setSlider('rangeProcessCost', 'valProcessCost', this.advanced.processCost, formatCurrency);
-
-        const wastageSlider = byId('rangeWastage');
-        if (wastageSlider) wastageSlider.value = this.advanced.wastagePct * 100;
-        const shrinkageSlider = byId('rangeShrinkage');
-        if (shrinkageSlider) shrinkageSlider.value = this.advanced.shrinkagePct * 100;
-
-        const notes = byId('advancedNotes');
-        if (notes) notes.value = this.advanced.notes || '';
     }
 
     syncAdvancedToggleUI() {
@@ -457,33 +317,14 @@ class ChickenCalc {
         }
     }
 
-    toggleAdvancedMode(forceValue, opts = {}) {
-        const nextState = typeof forceValue === 'boolean' ? forceValue : !this.advanced.enabled;
-        if (this.advanced.enabled === nextState) {
-            this.syncAdvancedToggleUI();
-            return nextState;
-        }
-
-        this.advanced.enabled = nextState;
+    toggleAdvancedMode() {
+        this.advanced.enabled = !this.advanced.enabled;
         this.persistAdvancedSettings();
         this.applyAdvancedState();
         this.calc();
         if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
             this.renderSim();
         }
-
-        if (nextState) {
-            const missingDimensions = !this.advanced.custom || !this.advanced.custom.length || !this.advanced.custom.width;
-            const needsConfig = !this.advanced.adviceMeta?.lastSync || this.advanced.farmSize === 'custom' || (this.advanced.farmSize === 'small' && missingDimensions);
-            if (needsConfig && !opts.skipConfigurator) {
-                setTimeout(() => this.openAdvancedConfigurator(), 120);
-            }
-            if (!this.advanced.adviceMeta?.lastSync && !opts.skipAdvice) {
-                setTimeout(() => this.generateAdvancedAdvice(), 200);
-            }
-        }
-
-        return nextState;
     }
 
     bind() {
@@ -511,41 +352,25 @@ class ChickenCalc {
 
         this.updateChickenToggle(chickenSelect?.value || 'kampung');
 
-        // Login button will be handled by Google renderButton
         document.getElementById('logout-btn')?.addEventListener('click', logout);
-        document.querySelectorAll('.profile-trigger').forEach(el => {
-            el.addEventListener('click', () => this.showProfile());
-            el.addEventListener('keydown', evt => {
-                if (evt.key === 'Enter' || evt.key === ' ') {
-                    evt.preventDefault();
-                    this.showProfile();
-                }
-            });
-        });
         document.getElementById('saveCalculation')?.addEventListener('click', () => this.save());
         document.getElementById('viewHistory')?.addEventListener('click', () => this.showHistory());
         document.getElementById('exportPdfDashboard')?.addEventListener('click', () => this.exportPDF());
+        document.getElementById('quickHistory')?.addEventListener('click', () => this.showHistory());
+
         const mainAdvancedSwitch = document.getElementById('advancedModeSwitch');
         if (mainAdvancedSwitch) {
-            const toggle = () => this.toggleAdvancedMode();
-            mainAdvancedSwitch.addEventListener('click', toggle);
-            mainAdvancedSwitch.addEventListener('keydown', (evt) => {
-                if (evt.key === 'Enter' || evt.key === ' ') {
-                    evt.preventDefault();
-                    toggle();
-                }
-            });
+            mainAdvancedSwitch.addEventListener('click', () => this.toggleAdvancedMode());
         }
-        // Tabs: Asumsi / Simulasi
+
         const asumsiTabBtn = document.getElementById('tabAsumsi');
         const simulasiTabBtn = document.getElementById('tabSimulasi');
         asumsiTabBtn?.addEventListener('click', () => this.tab('asumsi'));
         simulasiTabBtn?.addEventListener('click', () => this.tab('simulasi'));
-        if (asumsiTabBtn) asumsiTabBtn.setAttribute('aria-pressed', this.activeTab === 'asumsi' ? 'true' : 'false');
-        if (simulasiTabBtn) simulasiTabBtn.setAttribute('aria-pressed', this.activeTab === 'simulasi' ? 'true' : 'false');
 
         this.bindSliders();
         this.bindAdvancedControls();
+        this.bindPriceEditing();
     }
 
     updateChickenToggle(value) {
@@ -555,8 +380,7 @@ class ChickenCalc {
     }
 
     bindAdvancedControls() {
-        const basisButtons = document.querySelectorAll('#basisSwitch .basis-btn');
-        basisButtons.forEach(btn => {
+        document.querySelectorAll('#basisSwitch .basis-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const basis = btn.dataset.basis;
                 if (!basis || this.advanced.basis === basis) return;
@@ -571,7 +395,7 @@ class ChickenCalc {
         });
 
         const sliderMap = [
-            { id: 'rangeHarvestAge', prop: 'harvestAge', fmt: (v) => Number(v), displayId: 'valHarvestAge', customDisplay: (raw) => `${raw}` },
+            { id: 'rangeHarvestAge', prop: 'harvestAge', fmt: (v) => Number(v), displayId: 'valHarvestAge' },
             { id: 'rangeWastage', prop: 'wastagePct', fmt: (v) => Number(v) / 100, displayId: 'valWastage', customDisplay: (raw) => `${Number(raw).toFixed(1)}%` },
             { id: 'rangeShrinkage', prop: 'shrinkagePct', fmt: (v) => Number(v) / 100, displayId: 'valShrinkage', customDisplay: (raw) => `${Number(raw).toFixed(1)}%` },
             { id: 'rangeLaborCost', prop: 'laborCost', fmt: (v) => Number(v), displayId: 'valLaborCost' },
@@ -597,7 +421,6 @@ class ChickenCalc {
                         display.textContent = this.fmt(Number(raw));
                     }
                 }
-
                 this.persistAdvancedSettings();
                 this.calc();
                 if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
@@ -605,206 +428,6 @@ class ChickenCalc {
                 }
             });
         });
-
-        const advConfigBtn = document.getElementById('openAdvancedConfigurator');
-        if (advConfigBtn) {
-            advConfigBtn.addEventListener('click', () => {
-                if (!this.advanced.enabled) {
-                    this.toggleAdvancedMode(true, { skipConfigurator: true, skipAdvice: true });
-                    setTimeout(() => this.openAdvancedConfigurator(), 140);
-                } else {
-                    this.openAdvancedConfigurator();
-                }
-            });
-        }
-
-        document.getElementById('regenAdvice')?.addEventListener('click', () => {
-            if (!this.advanced.enabled) {
-                this.toggleAdvancedMode(true, { skipConfigurator: true });
-                return;
-            }
-            this.generateAdvancedAdvice();
-        });
-    }
-
-    async generateAdvancedAdvice() {
-        if (!this.advanced.enabled) {
-            this.notify('Aktifkan mode advance dulu', 'info');
-            return;
-        }
-
-        const button = document.getElementById('regenAdvice');
-        if (button) {
-            button.disabled = true;
-            button.textContent = '⏳ Menghitung...';
-        }
-
-        try {
-            const payload = {
-                action: 'advanced-advice',
-                context: {
-                    farmSize: this.advanced.farmSize || 'small',
-                    population: this.assumptions.pop,
-                    chickenType: document.getElementById('chickenType')?.value || 'kampung',
-                    coop: this.advanced.custom || {},
-                    location: this.advanced.location || {},
-                    customNeeds: this.advanced.custom?.extras || []
-                }
-            };
-
-            const res = await fetch('/api/proxy', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!res.ok) {
-                throw new Error(`Status ${res.status}`);
-            }
-
-            const data = await res.json();
-            this.hydrateAdvancedFromAdvice(data);
-            this.persistAdvancedSettings();
-            this.syncAdvancedControls();
-            this.calc();
-            if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
-                this.renderSim();
-            }
-            this.notify('Rekomendasi diperbarui', 'success');
-        } catch (error) {
-            console.error('Advice error', error);
-            this.notify('Gagal mendapatkan rekomendasi', 'error');
-        } finally {
-            if (button) {
-                button.disabled = false;
-                button.textContent = '🔄 Regenerasi rekomendasi';
-            }
-        }
-    }
-
-    hydrateAdvancedFromAdvice(data) {
-        if (!data || typeof data !== 'object') return;
-
-        const asNumber = (val, fallback) => {
-            const num = Number(val);
-            return Number.isFinite(num) ? num : fallback;
-        };
-
-        if (data.harvest_age_days) {
-            this.advanced.harvestAge = asNumber(data.harvest_age_days, this.advanced.harvestAge);
-        }
-
-        if (data.dressing_pct !== undefined) {
-            const val = data.dressing_pct > 1 ? data.dressing_pct / 100 : data.dressing_pct;
-            this.advanced.dressing = Math.min(Math.max(val, 0.45), 0.9);
-        }
-
-        if (data.process_cost_idr !== undefined) {
-            this.advanced.processCost = Math.max(0, asNumber(data.process_cost_idr, this.advanced.processCost));
-        }
-
-        if (data.wastage_pct !== undefined) {
-            const val = data.wastage_pct > 1 ? data.wastage_pct / 100 : data.wastage_pct;
-            this.advanced.wastagePct = Math.min(Math.max(val, 0), 0.15);
-        }
-
-        if (data.shrinkage_pct !== undefined) {
-            const val = data.shrinkage_pct > 1 ? data.shrinkage_pct / 100 : data.shrinkage_pct;
-            this.advanced.shrinkagePct = Math.min(Math.max(val, 0), 0.15);
-        }
-
-        if (data.basis === 'carcass' || data.basis === 'live') {
-            this.advanced.basis = data.basis;
-        }
-
-        let energyTotal = this.advanced.heatingCost || 0;
-
-        if (data.heating) {
-            if (data.heating.estimated_cost_idr !== undefined) {
-                const heatingSuggested = Math.max(0, asNumber(data.heating.estimated_cost_idr, this.advanced.heatingCost));
-                if (this.advanced.farmSize === 'small' && data.heating.needed === false) {
-                    energyTotal = 0;
-                } else {
-                    energyTotal = heatingSuggested;
-                }
-            }
-            this.advanced.adviceMeta = {
-                ...this.advanced.adviceMeta,
-                heating: {
-                    bulbs: data.heating.bulbs ?? null,
-                    wattPerBulb: data.heating.watt_per_bulb ?? null,
-                    hoursPerDay: data.heating.hours_per_day ?? null,
-                    days: data.heating.days ?? null,
-                    otherDevices: data.heating.other_devices || []
-                }
-            };
-        }
-
-        if (data.electricity?.cost_idr !== undefined) {
-            energyTotal += Math.max(0, asNumber(data.electricity.cost_idr, 0));
-            this.advanced.adviceMeta = {
-                ...this.advanced.adviceMeta,
-                electricity: {
-                    kwh: data.electricity.kwh ?? null,
-                    cost: asNumber(data.electricity.cost_idr, 0)
-                }
-            };
-        }
-
-        this.advanced.heatingCost = energyTotal;
-        this.advanced.electricityCost = 0;
-
-        if (data.vaccines) {
-            if (data.vaccines.total_cost_idr !== undefined) {
-                this.advanced.vaccineCost = Math.max(0, asNumber(data.vaccines.total_cost_idr, this.advanced.vaccineCost));
-            }
-            this.advanced.adviceMeta = {
-                ...this.advanced.adviceMeta,
-                vaccines: data.vaccines.items || []
-            };
-        }
-
-        if (data.labor_cost_idr !== undefined) {
-            this.advanced.laborCost = Math.max(0, asNumber(data.labor_cost_idr, this.advanced.laborCost));
-        }
-
-        if (data.overhead_cost_idr !== undefined) {
-            this.advanced.overheadCost = Math.max(0, asNumber(data.overhead_cost_idr, this.advanced.overheadCost));
-        }
-
-        if (data.transport_cost_idr !== undefined) {
-            this.advanced.transportCost = Math.max(0, asNumber(data.transport_cost_idr, this.advanced.transportCost));
-        }
-
-        const noteSections = [];
-        if (Array.isArray(this.advanced.adviceMeta?.vaccines) && this.advanced.adviceMeta.vaccines.length) {
-            const schedule = this.advanced.adviceMeta.vaccines
-                .map(item => `• Hari ${item.day ?? '?'}: ${item.name || 'Vaksin'} (${item.dose || 'dosis'})`)
-                .join('\n');
-            noteSections.push('Jadwal vaksin:\n' + schedule);
-        }
-        if (this.advanced.adviceMeta?.heating) {
-            const h = this.advanced.adviceMeta.heating;
-            const line = `Pemanas: ${h.bulbs || '?'} bohlam @${h.wattPerBulb || '?'}W, ${h.hoursPerDay || '?'} jam/hari selama ${h.days || '?'} hari.`;
-            noteSections.push(line);
-            if (Array.isArray(h.otherDevices) && h.otherDevices.length) {
-                noteSections.push('Perangkat tambahan: ' + h.otherDevices.join(', '));
-            }
-        }
-        if (data.notes) {
-            noteSections.push(data.notes);
-        }
-        this.advanced.notes = noteSections.join('\n\n');
-        this.advanced.adviceMeta = {
-            ...this.advanced.adviceMeta,
-            lastSync: new Date().toISOString(),
-            snapshot: data
-        };
-
-        const notes = document.getElementById('advancedNotes');
-        if (notes) {
-            notes.value = this.advanced.notes;
-        }
     }
 
     bindSliders() {
@@ -826,7 +449,6 @@ class ChickenCalc {
                 const disp = document.getElementById(sl.d);
                 if (disp) disp.textContent = sl.f(sl.s ? val : val);
                 this.calc();
-                // Realtime update simulation when the Simulasi tab is visible
                 if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
                     this.renderSim();
                 }
@@ -863,6 +485,10 @@ class ChickenCalc {
             const res = await fetch(endpoints[type]);
             const data = await res.json();
             this.price = data;
+            if (this.priceOverride.market == null) {
+                const input = document.getElementById('inputMarketPrice');
+                if (input && data.price) input.value = Math.round(data.price);
+            }
             this.calc();
             if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
                 this.renderSim();
@@ -871,10 +497,27 @@ class ChickenCalc {
             this.price = null;
             const h = document.getElementById('statHarga');
             if (h) h.textContent = 'Error';
-            if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
-                this.renderSim();
-            }
         }
+    }
+
+    bindPriceEditing() {
+        const btnEdit = document.getElementById('btnEditMarket');
+        const btnApply = document.getElementById('btnApplyMarket');
+        const row = document.getElementById('marketEditRow');
+        const input = document.getElementById('inputMarketPrice');
+
+        btnEdit?.addEventListener('click', () => {
+            row.style.display = row.style.display === 'none' ? 'grid' : 'none';
+            if (row.style.display === 'grid') input?.focus();
+        });
+        btnApply?.addEventListener('click', () => {
+            const val = Number(input?.value || 0);
+            if (Number.isFinite(val) && val > 0) {
+                this.priceOverride.market = val;
+                this.calc();
+                row.style.display = 'none';
+            }
+        });
     }
 
     computeEconomics(overrides = {}, options = {}) {
@@ -883,67 +526,40 @@ class ChickenCalc {
         const base = this.assumptions;
 
         const pop = Math.max(1, Math.round(overrides.pop ?? base.pop));
-        const survivalRaw = overrides.survival ?? base.survival;
-        const survival = Math.min(Math.max(Number(survivalRaw) || 0, 0), 1);
+        const survival = Math.min(Math.max(Number(overrides.survival ?? base.survival) || 0, 0), 1);
         const weight = Number(overrides.weight ?? base.weight) || 1;
         const feedPrice = Math.max(1, Math.round(overrides.feed ?? base.feed));
         const fcr = Number(overrides.fcr ?? base.fcr) || 2.0;
         const docPrice = Math.max(0, Math.round(overrides.doc ?? base.doc));
 
-        const priceInput = options.price ?? (typeof this.price?.price === 'number' ? this.price.price : null);
+        const priceInput = options.price ?? (this.priceOverride.market || this.price?.price);
         const priceValid = typeof priceInput === 'number' && priceInput > 0;
 
         const advancedActive = !!this.advanced?.enabled;
-        const wastagePct = advancedActive
-            ? Math.max(0, Number(this.advanced.wastagePct ?? 0))
-            : (isBroiler ? 0.05 : 0);
+        const wastagePct = advancedActive ? Math.max(0, Number(this.advanced.wastagePct ?? 0)) : (isBroiler ? 0.05 : 0);
         const shrinkagePct = advancedActive ? Math.max(0, Number(this.advanced.shrinkagePct ?? 0)) : 0;
         const shrinkageFactor = Math.max(0, 1 - shrinkagePct);
-        const harvestAge = advancedActive
-            ? Math.max(1, Math.round(this.advanced.harvestAge || (isBroiler ? 35 : 70)))
-            : (isBroiler ? 35 : 70);
+        const harvestAge = advancedActive ? Math.max(1, Math.round(this.advanced.harvestAge || (isBroiler ? 35 : 70))) : (isBroiler ? 35 : 70);
         const basis = advancedActive && this.advanced.basis === 'carcass' ? 'carcass' : 'live';
-        const dressing = basis === 'carcass'
-            ? Math.min(Math.max(Number(this.advanced.dressing ?? 0.72), 0.45), 0.9)
-            : 0.72;
+        const dressing = basis === 'carcass' ? Math.min(Math.max(Number(this.advanced.dressing ?? 0.72), 0.45), 0.9) : 0.72;
         const processCost = basis === 'carcass' ? Math.max(0, Math.round(this.advanced.processCost ?? 0)) : 0;
 
         const harvest = Math.round(pop * survival);
         const feedKgPrice = feedPrice / 50;
         const feedCostPerBird = feedKgPrice * (1 + wastagePct) * fcr * weight;
-        const feedCostPerBirdRounded = Math.round(feedCostPerBird);
-        const totalFeedCost = Math.round(pop * feedCostPerBirdRounded);
+        const totalFeedCost = Math.round(pop * Math.round(feedCostPerBird));
         const docCost = Math.round(pop * docPrice);
 
-        const vac = Math.ceil(pop / 100) * 100000;
-        const vit = Math.ceil(pop / 100) * 50000;
-        const baseVacCost = vac + vit;
-        const elec = Math.round(Math.ceil(pop / 100) * 10 * 504 / 1000 * 1444.70);
-        const baseEnergyCost = elec;
+        const baseVacCost = Math.ceil(pop / 100) * 150000;
+        const baseEnergyCost = Math.round(Math.ceil(pop / 100) * 10 * 504 / 1000 * 1444.70);
 
-        const ratio = options.scaleAgainstPop ? Math.max(pop / options.scaleAgainstPop, 0.1) : 1;
-        const scaled = (value, minFactor = 0.5) => Math.round(value * Math.max(ratio, minFactor));
+        const vaccineCost = advancedActive ? Number(this.advanced.vaccineCost ?? baseVacCost) : baseVacCost;
+        const energyCost = advancedActive ? Number(this.advanced.heatingCost ?? baseEnergyCost) : baseEnergyCost;
+        const laborCost = advancedActive ? Number(this.advanced.laborCost ?? 0) : 0;
+        const overheadCost = advancedActive ? Number(this.advanced.overheadCost ?? 0) : 0;
+        const transportCost = advancedActive ? Number(this.advanced.transportCost ?? 0) : 0;
 
-        const vaccineCost = advancedActive
-            ? scaled(Number(this.advanced.vaccineCost ?? baseVacCost), 0.5)
-            : baseVacCost;
-        const energyCost = advancedActive
-            ? scaled(Number(this.advanced.heatingCost ?? baseEnergyCost), 0.6)
-            : baseEnergyCost;
-        const laborCost = advancedActive
-            ? scaled(Number(this.advanced.laborCost ?? 0), 0.5)
-            : 0;
-        const overheadCost = advancedActive
-            ? scaled(Number(this.advanced.overheadCost ?? 0), 0.4)
-            : 0;
-        const transportCost = advancedActive
-            ? scaled(Number(this.advanced.transportCost ?? 0), 0.7)
-            : 0;
-
-        const extraCost = advancedActive
-            ? vaccineCost + energyCost + laborCost + overheadCost + transportCost
-            : baseVacCost + baseEnergyCost;
-
+        const extraCost = vaccineCost + energyCost + laborCost + overheadCost + transportCost;
         const totalCost = docCost + totalFeedCost + extraCost;
 
         let revenue = null;
@@ -967,43 +583,12 @@ class ChickenCalc {
         const epef = (survival * 100 * weight * 100) / (fcr * harvestAge);
 
         return {
-            chickenType,
-            pop,
-            survival,
-            weight,
-            feedPrice,
-            fcr,
-            docPrice,
-            harvest,
-            feedCostPerBird: feedCostPerBirdRounded,
-            totalFeedCost,
-            docCost,
-            vaccineCost,
-            energyCost,
-            laborCost,
-            overheadCost,
-            transportCost,
-            extraCost,
-            totalCost,
-            price: priceValid ? priceInput : null,
-            priceValid,
-            revenue,
-            profit,
-            margin,
-            basis,
-            dressing,
-            processCost,
-            wastagePct,
-            shrinkagePct,
-            shrinkageFactor,
-            harvestAge,
-            costPerKg,
-            breakEven,
-            epef,
-            advancedActive,
-            productionKg,
-            carcassKg,
-            notes: this.advanced?.notes || ''
+            chickenType, pop, survival, weight, feedPrice, fcr, docPrice, harvest,
+            feedCostPerBird: Math.round(feedCostPerBird), totalFeedCost, docCost,
+            vaccineCost, energyCost, laborCost, overheadCost, transportCost, extraCost, totalCost,
+            price: priceValid ? priceInput : null, priceValid, revenue, profit, margin,
+            basis, dressing, processCost, wastagePct, shrinkagePct, harvestAge,
+            costPerKg, breakEven, epef, advancedActive, productionKg
         };
     }
 
@@ -1026,13 +611,15 @@ class ChickenCalc {
 
         this.updateBars(result.revenue ?? 0, result.totalCost, result.profit ?? 0);
 
+        // Harvest estimate
+        const est = this.estimateHarvestDays(result.fcr, result.weight, result.chickenType);
+        this.setText('statHarvestEstimate', `${est.min}–${est.max} hari`);
+
         if (result.advancedActive) {
             this.setText('statCostPerKg', result.costPerKg ? this.fmt(result.costPerKg) : '–');
             this.setText('statBreakEven', result.breakEven ? this.fmt(result.breakEven) : '–');
             const epefEl = document.getElementById('statEpef');
-            if (epefEl) {
-                epefEl.textContent = Number.isFinite(result.epef) ? result.epef.toFixed(1) : '–';
-            }
+            if (epefEl) epefEl.textContent = Number.isFinite(result.epef) ? result.epef.toFixed(1) : '–';
         }
     }
 
@@ -1050,9 +637,7 @@ class ChickenCalc {
 
     tab(t) {
         const next = t === 'simulasi' ? 'simulasi' : 'asumsi';
-        if (next === this.activeTab) {
-            return;
-        }
+        if (next === this.activeTab) return;
 
         const prev = this.activeTab;
         const prevBtn = document.getElementById(prev === 'asumsi' ? 'tabAsumsi' : 'tabSimulasi');
@@ -1083,12 +668,9 @@ class ChickenCalc {
         }
 
         this.activeTab = next;
-
         const title = document.getElementById('secondaryCardTitle');
         if (title) title.textContent = next === 'asumsi' ? 'Asumsi Produksi' : 'Simulasi Skenario';
-        if (next === 'simulasi') {
-            this.renderSim();
-        }
+        if (next === 'simulasi') this.renderSim();
     }
 
     renderSim() {
@@ -1120,14 +702,7 @@ class ChickenCalc {
             {
                 name: 'Realistis',
                 note: 'Menggunakan asumsi dasar saat ini.',
-                overrides: {
-                    pop: base.pop,
-                    survival: base.survival,
-                    doc: base.doc,
-                    feed: base.feed,
-                    fcr: base.fcr,
-                    weight: base.weight
-                }
+                overrides: { ...base }
             },
             {
                 name: 'Konservatif',
@@ -1143,24 +718,25 @@ class ChickenCalc {
             }
         ];
 
-    const fmtCurrency = (value) => Number.isFinite(value) ? this.fmt(Math.round(value)) : '—';
-
-        let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">';
+        const fmtCurrency = (value) => Number.isFinite(value) ? this.fmt(Math.round(value)) : '—';
+        let html = '';
         scenarios.forEach(({ name, note, overrides }) => {
-            const result = this.calcScenario(overrides);
+            const result = this.computeEconomics(overrides, {
+                price: this.priceOverride.market || this.price?.price,
+                scaleAgainstPop: this.assumptions.pop,
+                chickenType: document.getElementById('chickenType')?.value || 'kampung'
+            });
             const icon = result.profit == null ? '—' : (result.profit > 0 ? '📈' : '📉');
             const col = result.profit == null ? '#567A60' : (result.profit > 0 ? '#3F8F5F' : '#C8513A');
             const costPerBird = result.harvest > 0 ? Math.round(result.totalCost / result.harvest) : null;
             const marginLabel = result.margin != null ? `${(result.margin * 100).toFixed(1)}%` : '—';
+            
             html += `
                 <div style="background:rgba(255,255,254,0.95);padding:20px;border-radius:12px;border:1px solid rgba(137,173,146,0.4);box-shadow:0 18px 32px rgba(41,71,54,0.2);color:#24412F;display:flex;flex-direction:column;gap:10px">
-                    <div>
-                        <h4 style="margin:0 0 4px">${name}</h4>
-                        <small style="color:#567A60">${note}</small>
-                    </div>
+                    <div><h4 style="margin:0 0 4px">${name}</h4><small style="color:#567A60">${note}</small></div>
                     <div style="font-size:0.9rem;display:grid;gap:6px">
                         <div><b>Populasi:</b> ${overrides.pop.toLocaleString('id-ID')} ekor</div>
-        <div><b>Survival:</b> ${(overrides.survival * 100).toFixed(1)}% • <b>Bobot:</b> ${Number(overrides.weight).toFixed(2)} kg</div>
+                        <div><b>Survival:</b> ${(overrides.survival * 100).toFixed(1)}% • <b>Bobot:</b> ${Number(overrides.weight).toFixed(2)} kg</div>
                         <div><b>FCR:</b> ${Number(overrides.fcr).toFixed(2)} • <b>Panen:</b> ${result.harvest.toLocaleString('id-ID')} ekor</div>
                     </div>
                     <hr style="margin:4px 0 8px">
@@ -1168,7 +744,6 @@ class ChickenCalc {
                         <div><b>Total Biaya:</b> ${fmtCurrency(result.totalCost)}</div>
                         <div><b>Biaya/Ekor:</b> ${fmtCurrency(costPerBird)}</div>
                         <div><b>Break-even:</b> ${fmtCurrency(result.breakEven)}</div>
-                        <div><b>Basis Harga:</b> ${result.basis === 'carcass' ? 'Karkas' : 'Bobot hidup'}</div>
                         <div><b>Pendapatan:</b> ${fmtCurrency(result.revenue)}</div>
                         <div style="font-weight:700;color:${col}"><b>Profit:</b> ${icon} ${fmtCurrency(result.profit)}</div>
                         <div><b>Margin:</b> ${marginLabel}</div>
@@ -1176,26 +751,12 @@ class ChickenCalc {
                 </div>
             `;
         });
-        html += '</div>';
         c.innerHTML = html;
-    }
-
-    calcScenario(overrides) {
-        return this.computeEconomics(overrides, {
-            price: typeof this.price?.price === 'number' ? this.price.price : null,
-            scaleAgainstPop: this.assumptions.pop,
-            chickenType: document.getElementById('chickenType')?.value || 'kampung'
-        });
     }
 
     async save() {
         const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
-
-        // Show captcha modal
+        if (!user) { alert('Login dulu'); return; }
         this.showCaptchaModal();
     }
 
@@ -1208,7 +769,7 @@ class ChickenCalc {
             <div id="notesStep" style="display:none">
                 <p style="color:#567a60;margin-bottom:12px">✅ Verifikasi berhasil!</p>
                 <label style="display:block;margin-bottom:8px;font-weight:500;color:#24412F">Catatan (opsional):</label>
-                <textarea id="notesInput" placeholder="Tambahkan catatan untuk perhitungan ini..." style="width:100%;min-height:80px;padding:12px;border:1px solid rgba(137,173,146,0.4);border-radius:8px;font-family:inherit;resize:vertical;background:rgba(255,255,254,0.84)"></textarea>
+                <textarea id="notesInput" placeholder="Tambahkan catatan..." style="width:100%;min-height:80px;padding:12px;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)"></textarea>
                 <div style="display:flex;gap:12px;margin-top:16px;justify-content:flex-end">
                     <button id="cancelSave" style="padding:10px 20px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567a60">Batal</button>
                     <button id="confirmSave" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer;font-weight:500">Simpan</button>
@@ -1216,48 +777,28 @@ class ChickenCalc {
             </div>
         `;
         this.modal('Simpan Perhitungan', html);
-        
-        // Render captcha after modal is in DOM
         setTimeout(() => {
             if (window.hcaptcha) {
-                const container = document.getElementById('hcaptcha-container');
-                if (container) {
-                    captchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
-                        sitekey: CONFIG?.captchaKey || '',
-                        callback: 'onCaptchaSuccess'
-                    });
-                }
+                captchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
+                    sitekey: CONFIG?.captchaKey || '',
+                    callback: 'onCaptchaSuccess'
+                });
             }
         }, 100);
     }
 
     async saveWithCaptcha(token) {
-        // Hide captcha, show notes input
-        const captchaStep = document.getElementById('captchaStep');
-        const notesStep = document.getElementById('notesStep');
-        
-        if (captchaStep) captchaStep.style.display = 'none';
-        if (notesStep) {
-            notesStep.style.display = 'block';
-            document.getElementById('notesInput')?.focus();
-        }
+        document.getElementById('captchaStep').style.display = 'none';
+        document.getElementById('notesStep').style.display = 'block';
+        document.getElementById('notesInput')?.focus();
 
-        // Bind buttons
-        document.getElementById('cancelSave')?.addEventListener('click', () => {
-            this.closeModal();
-        });
-
+        document.getElementById('cancelSave')?.addEventListener('click', () => this.closeModal());
         document.getElementById('confirmSave')?.addEventListener('click', async () => {
             const notes = document.getElementById('notesInput')?.value || null;
-            
             try {
                 const data = this.getData();
-                if (!data.marketPrice || data.marketPrice <= 0) {
-                    throw new Error('Harga pasar belum tersedia. Coba lagi setelah harga ter-update.');
-                }
+                if (!data.marketPrice || data.marketPrice <= 0) throw new Error('Harga pasar belum tersedia.');
                 const sb = getSb();
-                const { data: { user } } = await sb.auth.getUser();
-                await ensureProfileRow(user);
                 const { error } = await sb.rpc('save_calculation', {
                     p_chicken_type: data.chickenType,
                     p_populasi: data.populasi,
@@ -1290,9 +831,7 @@ class ChickenCalc {
                     p_transport_cost: data.biayaTransport,
                     p_cost_per_kg: data.costPerKg,
                     p_break_even_price: data.breakEven,
-                    p_epef: data.epef,
-                    p_ai_notes: data.notes,
-                    p_ai_snapshot: data.aiSnapshot
+                    p_epef: data.epef
                 });
                 if (error) throw error;
                 this.closeModal();
@@ -1306,11 +845,6 @@ class ChickenCalc {
 
     getData() {
         const result = this.computeEconomics();
-        const marketPrice = result.priceValid ? result.price : (this.price?.price || 0);
-        const aiSnapshot = this.advanced?.adviceMeta?.snapshot || null;
-        const totalPendapatan = Number.isFinite(result.revenue) ? Math.round(result.revenue) : 0;
-        const keuntungan = Number.isFinite(result.profit) ? Math.round(result.profit) : 0;
-
         return {
             chickenType: result.chickenType,
             populasi: result.pop,
@@ -1319,8 +853,7 @@ class ChickenCalc {
             hargaPakan: result.feedPrice,
             fcr: result.fcr,
             docPrice: result.docPrice,
-            marketPrice,
-            priceValid: result.priceValid,
+            marketPrice: result.priceValid ? result.price : (this.price?.price || 0),
             priceSource: this.price?.source || null,
             ekorPanen: result.harvest,
             biayaDoc: result.docCost,
@@ -1332,8 +865,8 @@ class ChickenCalc {
             biayaOverhead: result.overheadCost,
             biayaTransport: result.transportCost,
             totalBiaya: result.totalCost,
-            totalPendapatan,
-            keuntungan,
+            totalPendapatan: Number.isFinite(result.revenue) ? Math.round(result.revenue) : 0,
+            keuntungan: Number.isFinite(result.profit) ? Math.round(result.profit) : 0,
             margin: result.margin,
             isAdvanced: result.advancedActive,
             basis: result.basis,
@@ -1344,41 +877,23 @@ class ChickenCalc {
             harvestAge: result.harvestAge,
             costPerKg: result.costPerKg,
             breakEven: result.breakEven,
-            epef: result.epef,
-            notes: result.notes || null,
-            aiSnapshot
+            epef: result.epef
         };
     }
 
     async showHistory() {
         const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
-
-        const loadingHtml = `
-            <div style="text-align:center;padding:40px;color:#567a60">
-                <div style="display:inline-block;width:40px;height:40px;border:4px solid rgba(137,173,146,0.42);border-top-color:#3F8F5F;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-                <p style="margin-top:16px">Memuat history...</p>
-            </div>
-        `;
+        if (!user) { alert('Login dulu'); return; }
         
-        this.modal('History', loadingHtml);
+        this.modal('History', '<div style="text-align:center;padding:40px">Memuat history...</div>');
 
         try {
             const sb = getSb();
-            const { data: history, error } = await sb.rpc('get_recent_calculations', {
-                limit_count: 20,
-                offset_count: 0
-            });
+            const { data: history, error } = await sb.rpc('get_recent_calculations', { limit_count: 20, offset_count: 0 });
             if (error) throw error;
             
             if (!history || history.length === 0) {
-                const modalBody = document.querySelector('.petok-modal-body');
-                if (modalBody) {
-                    modalBody.innerHTML = '<p style="text-align:center;padding:40px;color:#567a60">Belum ada history</p>';
-                }
+                document.querySelector('.petok-modal-body').innerHTML = '<p style="text-align:center;padding:40px">Belum ada history</p>';
                 return;
             }
 
@@ -1388,8 +903,6 @@ class ChickenCalc {
                 const icon = c.keuntungan_bersih > 0 ? '📈' : '📉';
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 const star = c.is_favorite ? '⭐' : '☆';
-                const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
-                const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
                 html += `
                     <div style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
@@ -1397,10 +910,10 @@ class ChickenCalc {
                             <div style="flex:1">
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
-                                    ${modeBadge}
+                                    ${c.is_advanced ? '<span class="history-tag">Advance</span>' : ''}
                                     <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer">${star}</button>
                                 </div>
-                                <div style="font-size:0.85rem;color:#567a60">${date}${basisInfo}</div>
+                                <div style="font-size:0.85rem;color:#567a60">${date}</div>
                                 <div style="font-weight:600;color:${col}">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
                                 ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem">"${c.notes}"</div>` : ''}
                             </div>
@@ -1413,18 +926,10 @@ class ChickenCalc {
                 `;
             });
             html += '</div>';
-            
-            const modalBody = document.querySelector('.petok-modal-body');
-            if (modalBody) {
-                modalBody.innerHTML = html;
-            }
+            document.querySelector('.petok-modal-body').innerHTML = html;
             this.bindHistoryBtns();
         } catch (e) {
-            console.error('History load error', e);
-            const modalBody = document.querySelector('.petok-modal-body');
-            if (modalBody) {
-                modalBody.innerHTML = '<p style="text-align:center;color:#C8513A;padding:40px">Gagal memuat history</p>';
-            }
+            document.querySelector('.petok-modal-body').innerHTML = '<p style="text-align:center;color:#C8513A;padding:40px">Gagal memuat history</p>';
         }
     }
 
@@ -1433,30 +938,15 @@ class ChickenCalc {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
                 const sb = getSb();
-                const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
-                    calculation_id: id
-                });
-                if (error) {
-                    console.error('Toggle favorite error:', error);
-                    return;
-                }
+                const { data: newStatus } = await sb.rpc('toggle_favorite_calculation', { calculation_id: id });
                 e.target.textContent = newStatus ? '⭐' : '☆';
             });
         });
-
         document.querySelectorAll('.btn-load').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
                 const sb = getSb();
-                const { data: calc, error } = await sb
-                    .from('calculation_history')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                if (error) {
-                    console.error('Load calculation error:', error);
-                    return;
-                }
+                const { data: calc } = await sb.from('calculation_history').select('*').eq('id', id).single();
                 if (calc) {
                     this.loadCalc(calc);
                     this.closeModal();
@@ -1464,22 +954,13 @@ class ChickenCalc {
                 }
             });
         });
-
         document.querySelectorAll('.btn-del').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if (!confirm('Hapus?')) return;
                 const id = e.target.dataset.id;
                 const sb = getSb();
-                const { error } = await sb.rpc('delete_calculation', {
-                    calculation_id: id
-                });
-                if (error) {
-                    console.error('Delete calculation error:', error);
-                    this.notify('Error', 'error');
-                    return;
-                }
+                await sb.rpc('delete_calculation', { calculation_id: id });
                 e.target.closest('div[style*="border:1px"]').remove();
-                this.notify('Deleted', 'success');
             });
         });
     }
@@ -1504,10 +985,8 @@ class ChickenCalc {
         this.setSlider('rangeFCR', 'valFCR', c.fcr, v => v.toFixed(2));
         this.setSlider('rangeDocPrice', 'valDocPrice', c.doc_price, v => this.fmt(v));
 
-        if (typeof c.is_advanced === 'boolean') {
-            this.toggleAdvancedMode(c.is_advanced, { skipConfigurator: true, skipAdvice: true });
-        }
         if (c.is_advanced) {
+            this.advanced.enabled = true;
             this.advanced.basis = c.basis || this.advanced.basis;
             if (c.dressing_pct != null) this.advanced.dressing = c.dressing_pct;
             if (c.process_cost != null) this.advanced.processCost = c.process_cost;
@@ -1519,180 +998,30 @@ class ChickenCalc {
             if (c.labor_cost != null) this.advanced.laborCost = c.labor_cost;
             if (c.overhead_cost != null) this.advanced.overheadCost = c.overhead_cost;
             if (c.transport_cost != null) this.advanced.transportCost = c.transport_cost;
-            if (c.ai_notes) this.advanced.notes = c.ai_notes;
+            this.persistAdvancedSettings();
+            this.applyAdvancedState();
+        } else {
+            this.advanced.enabled = false;
             this.persistAdvancedSettings();
             this.applyAdvancedState();
         }
-
         this.calc();
-    }
-
-    async showProfile() {
-        const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
-
-        if (this.profileLoading) {
-            return;
-        }
-
-        this.profileLoading = true;
-
-        const loadingHtml = `
-            <div style="text-align:center;padding:40px;color:#567a60">
-                <div style="display:inline-block;width:40px;height:40px;border:4px solid rgba(137,173,146,0.42);border-top-color:#3F8F5F;border-radius:50%;animation:spin 0.8s linear infinite"></div>
-                <p style="margin-top:16px">Memuat profil...</p>
-            </div>
-        `;
-        
-        this.modal('Profile', loadingHtml);
-
-        try {
-            const sb = getSb();
-            const { data: { user } } = await sb.auth.getUser();
-            if (!user) throw new Error('Not authenticated');
-
-            const identity = deriveUserIdentity(user);
-
-            const { data: profile, error } = await sb
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .maybeSingle();
-            
-            if (error) throw error;
-            const p = profile || {};
-            const displayName = p.full_name ?? identity.fullName ?? '';
-            const displayPhone = p.phone ?? '';
-            const displayFarmName = p.farm_name ?? '';
-            const farmTypeRaw = p.farm_type ?? '';
-            const displayFarmType = ['small', 'medium', 'large', 'custom'].includes(farmTypeRaw) ? farmTypeRaw : (this.advanced?.farmSize || 'small');
-            this.advanced.farmSize = displayFarmType;
-            if (typeof p.advanced_mode === 'boolean') {
-                this.advanced.enabled = p.advanced_mode;
-            }
-            if (p.advanced_config && typeof p.advanced_config === 'object') {
-                const cfg = p.advanced_config;
-                const mapKeys = ['basis','dressing','processCost','harvestAge','wastagePct','shrinkagePct','laborCost','overheadCost','transportCost','heatingCost','vaccineCost','notes','farmSize'];
-                mapKeys.forEach(key => {
-                    if (cfg[key] !== undefined && cfg[key] !== null) {
-                        this.advanced[key] = cfg[key];
-                    }
-                });
-                if (cfg.custom && typeof cfg.custom === 'object') {
-                    this.advanced.custom = {
-                        ...this.advanced.custom,
-                        ...cfg.custom
-                    };
-                }
-                if (cfg.adviceMeta) {
-                    this.advanced.adviceMeta = cfg.adviceMeta;
-                }
-                this.persistAdvancedSettings();
-                this.applyAdvancedState();
-            }
-            this.persistAdvancedSettings();
-            this.applyAdvancedState();
-            
-            const html = `
-                <form id="profileForm" style="display:grid;gap:16px;color:#24412F">
-                    <div>
-                        <h4>Info Personal</h4>
-                        <input type="text" id="fullName" value="${escapeAttr(displayName)}" placeholder="Nama" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
-                        <input type="email" value="${escapeAttr(p.email || user.email)}" disabled style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.28);border-radius:8px;background:rgba(255,255,254,0.75);color:#567a60">
-                        <input type="tel" id="phone" value="${escapeAttr(displayPhone)}" placeholder="Telp" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
-                    </div>
-                    <div>
-                        <h4>Peternakan</h4>
-                        <input type="text" id="farmName" value="${escapeAttr(displayFarmName)}" placeholder="Nama Peternakan" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
-                    </div>
-                    <div style="display:flex;gap:12px;justify-content:flex-end">
-                        <button type="button" id="cancelBtn" style="padding:10px 20px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567a60">Batal</button>
-                        <button type="submit" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer">Simpan</button>
-                    </div>
-                </form>
-            `;
-            
-            const modalBody = document.querySelector('.petok-modal-body');
-            if (modalBody) {
-                modalBody.innerHTML = html;
-            }
-            
-            document.getElementById('cancelBtn')?.addEventListener('click', () => this.closeModal());
-            document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                try {
-                    const sb = getSb();
-                    const advancedConfigPayload = {
-                        basis: this.advanced.basis,
-                        dressing: this.advanced.dressing,
-                        processCost: this.advanced.processCost,
-                        harvestAge: this.advanced.harvestAge,
-                        wastagePct: this.advanced.wastagePct,
-                        shrinkagePct: this.advanced.shrinkagePct,
-                        laborCost: this.advanced.laborCost,
-                        overheadCost: this.advanced.overheadCost,
-                        transportCost: this.advanced.transportCost,
-                        heatingCost: this.advanced.heatingCost,
-                        vaccineCost: this.advanced.vaccineCost,
-                        notes: this.advanced.notes,
-                        farmSize: this.advanced.farmSize,
-                        custom: this.advanced.custom,
-                        adviceMeta: this.advanced.adviceMeta
-                    };
-                    const { error } = await sb.rpc('update_user_profile', {
-                        p_full_name: document.getElementById('fullName').value || null,
-                        p_phone: document.getElementById('phone').value || null,
-                        p_location: null,
-                        p_farm_name: document.getElementById('farmName').value || null,
-                        p_farm_type: this.advanced.farmSize || null,
-                        p_advanced_mode: this.advanced.enabled,
-                        p_advanced_config: advancedConfigPayload
-                    });
-                    if (error) throw error;
-                    this.closeModal();
-                    this.notify('Saved!', 'success');
-                } catch (e) {
-                    console.error('Update profile error:', e);
-                    this.notify('Error', 'error');
-                }
-            });
-        } catch (e) {
-            console.error('Profile load error', e);
-            const modalBody = document.querySelector('.petok-modal-body');
-            if (modalBody) {
-                modalBody.innerHTML = '<p style="text-align:center;color:#C8513A;padding:40px">Gagal memuat profil</p>';
-            }
-        }
-        finally {
-            this.profileLoading = false;
-        }
     }
 
     exportPDF() {
         const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
-        if (!jsPDF) {
-            this.notify('PDF lib not loaded', 'error');
-            return;
-        }
+        if (!jsPDF) { this.notify('PDF lib not loaded', 'error'); return; }
 
         try {
             const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
             const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
             const marginX = 18;
-            const marginY = 18;
 
             const data = this.getData();
             const jenisDisplay = data.chickenType === 'broiler' ? 'Broiler' : 'Ayam Kampung';
             const basisLabel = data.basis === 'carcass' ? 'kg karkas' : 'kg hidup';
             const priceDisplay = data.marketPrice > 0 ? `${this.fmt(data.marketPrice)}/${basisLabel}` : '—';
-            const ekorDisplay = `${data.ekorPanen.toLocaleString('id-ID')} ekor`;
-            const marginDisplay = data.margin != null ? `${(data.margin * 100).toFixed(1)}%` : '—';
 
-            // Header band
             doc.setFillColor(58, 125, 71);
             doc.rect(0, 0, pageWidth, 48, 'F');
             doc.setFont('helvetica', 'bold');
@@ -1705,150 +1034,20 @@ class ChickenCalc {
             doc.text(`Tanggal: ${new Date().toLocaleDateString('id-ID')}`, pageWidth - marginX, 26, { align: 'right' });
             doc.text(`Segment: ${jenisDisplay}`, pageWidth - marginX, 36, { align: 'right' });
 
-            // Background panel
-            doc.setFillColor(247, 251, 233);
-            doc.roundedRect(marginX, 54, pageWidth - marginX * 2, pageHeight - 72, 6, 6, 'F');
-
-            // Highlight cards
-            const cardWidth = (pageWidth - marginX * 2 - 16) / 3;
-            const highlightY = 64;
-            const highlightCards = [
-                { label: 'Pendapatan Bruto', value: this.fmt(data.totalPendapatan), stroke: [99, 180, 99], fill: [232, 248, 225], note: priceDisplay },
-                { label: 'Total Biaya', value: this.fmt(data.totalBiaya), stroke: [224, 138, 61], fill: [255, 241, 218], note: `Biaya/Ekor ${this.fmt(Math.round(data.totalBiaya / Math.max(data.ekorPanen, 1)))}` },
-                { label: 'Keuntungan Bersih', value: this.fmt(data.keuntungan), stroke: [63, 133, 82], fill: [224, 242, 214], note: `Margin ${marginDisplay}` }
-            ];
-
-            highlightCards.forEach((card, idx) => {
-                const x = marginX + idx * (cardWidth + 8);
-                doc.setDrawColor(card.stroke[0], card.stroke[1], card.stroke[2]);
-                doc.setFillColor(card.fill[0], card.fill[1], card.fill[2]);
-                doc.roundedRect(x, highlightY, cardWidth, 28, 4, 4, 'FD');
-                doc.setTextColor(47, 81, 50);
-                doc.setFont('helvetica', 'bold');
-                doc.setFontSize(10);
-                doc.text(card.label.toUpperCase(), x + 6, highlightY + 10);
-                doc.setFontSize(13);
-                doc.text(card.value, x + 6, highlightY + 21);
-                if (card.note) {
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.text(card.note, x + 6, highlightY + 26);
-                    doc.setFont('helvetica', 'bold');
-                }
-            });
-
-            const sectionStartY = highlightY + 40;
-            let cursorY = sectionStartY;
-            const sectionPadding = 6;
-            const contentWidth = pageWidth - marginX * 2;
-            const columnSplitX = marginX + contentWidth / 2;
-            let rightColumnBottom = sectionStartY;
-
-            const fmtCurrency = (val) => Number.isFinite(val) ? this.fmt(Math.round(val)) : '—';
-            const fmtMaybe = (val) => Number.isFinite(val) ? fmtCurrency(val) : '—';
-
-            const sections = [
-                {
-                    title: 'Asumsi Produksi',
-                    rows: [
-                        ['Populasi', `${data.populasi.toLocaleString('id-ID')} ekor`],
-                        ['Survival Rate', `${(data.survival * 100).toFixed(1)} %`],
-                        ['Bobot Panen', `${data.bobot.toFixed(2)} kg`],
-                        ['Harga Pakan/Sak', fmtCurrency(data.hargaPakan)]
-                    ]
-                },
-                {
-                    title: 'Komponen Biaya',
-                    rows: [
-                        ['Biaya DOC', fmtCurrency(data.biayaDoc)],
-                        ['Biaya Pakan', fmtCurrency(data.biayaPakan)],
-                        ['Vaksin & Vitamin', fmtCurrency(data.biayaVaksin)],
-                        ['Energi/Pemanas', fmtCurrency(data.biayaEnergi)],
-                        ['Tenaga Kerja', fmtCurrency(data.biayaLabor)],
-                        ['Overhead', fmtCurrency(data.biayaOverhead)],
-                        ['Transport & Komisi', fmtCurrency(data.biayaTransport)],
-                        ['Total Biaya', fmtCurrency(data.totalBiaya)]
-                    ]
-                },
-                {
-                    title: 'Ikhtisar Pasar',
-                    rows: [
-                        ['Jenis Ayam', jenisDisplay],
-                        ['Harga Jual', priceDisplay],
-                        ['Ekor Panen', ekorDisplay],
-                        ['Catatan Sumber', this.price?.source ? this.price.source : '—']
-                    ]
-                }
-            ];
-
-            if (data.isAdvanced) {
-                sections.push({
-                    title: 'Metrix Advance',
-                    rows: [
-                        ['Basis Harga', data.basis === 'carcass' ? 'Karkas' : 'Bobot hidup'],
-                        ['Umur Panen', `${data.harvestAge} hari`],
-                        ['Wastage Pakan', `${(data.wastagePct * 100).toFixed(1)} %`],
-                        ['Break-even Price', fmtMaybe(data.breakEven)],
-                        ['Cost per Kg', fmtMaybe(data.costPerKg)],
-                        ['EPEF', data.epef ? data.epef.toFixed(1) : '—']
-                    ]
-                });
-            }
-
-            doc.setTextColor(47, 81, 50);
-            doc.setFont('helvetica', 'bold');
+            let y = 60;
+            doc.setTextColor(0, 0, 0);
             doc.setFontSize(12);
-
-            sections.forEach((section, index) => {
-                const isRightColumn = index === 1;
-                if (!isRightColumn && index > 1) {
-                    cursorY = Math.max(cursorY, rightColumnBottom);
-                }
-                const baseX = isRightColumn ? columnSplitX + sectionPadding : marginX + sectionPadding;
-                const widthAdjust = (contentWidth / 2) - sectionPadding * 2;
-                const headerY = isRightColumn ? sectionStartY : cursorY;
-
-                if (isRightColumn && headerY < cursorY) {
-                    cursorY = headerY;
-                }
-
-                doc.text(section.title, baseX, cursorY);
-                doc.setDrawColor(99, 180, 99);
-                doc.setLineWidth(0.4);
-                doc.line(baseX, cursorY + 2.5, baseX + widthAdjust, cursorY + 2.5);
-                let rowY = cursorY + 8;
-
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(10);
-                section.rows.forEach(row => {
-                    doc.text(row[0], baseX, rowY);
-                    doc.text(row[1], baseX + widthAdjust, rowY, { align: 'right' });
-                    rowY += 6.5;
-                });
-
-                if (isRightColumn) {
-                    rightColumnBottom = rowY + 6;
-                } else {
-                    cursorY = rowY + 6;
-                }
-            });
-
-            // Footer notes
-            doc.setFont('helvetica', 'italic');
-            doc.setFontSize(9);
-            doc.setTextColor(111, 141, 98);
-            doc.text('Laporan otomatis Petok Predict — parameter bisa disesuaikan kembali di aplikasi sebelum ekspor ulang.', marginX + 2, pageHeight - 20);
-
-            if (data.notes) {
-                doc.setFont('helvetica', 'normal');
-                doc.setFontSize(9);
-                doc.setTextColor(70, 105, 78);
-                const noteY = Math.max(cursorY, rightColumnBottom) + 6;
-                doc.text('Catatan Rekomendasi:', marginX + 2, noteY);
-                const wrapped = doc.splitTextToSize(data.notes, contentWidth - 4);
-                doc.text(wrapped, marginX + 2, noteY + 6);
-            }
-
+            doc.text(`Total Pendapatan: ${this.fmt(data.totalPendapatan)}`, marginX, y); y += 10;
+            doc.text(`Total Biaya: ${this.fmt(data.totalBiaya)}`, marginX, y); y += 10;
+            doc.text(`Keuntungan Bersih: ${this.fmt(data.keuntungan)}`, marginX, y); y += 20;
+            
+            doc.text('Detail:', marginX, y); y += 10;
+            doc.setFontSize(10);
+            doc.text(`Populasi: ${data.populasi}`, marginX, y); y += 6;
+            doc.text(`Survival: ${(data.survival * 100).toFixed(1)}%`, marginX, y); y += 6;
+            doc.text(`Bobot: ${data.bobot} kg`, marginX, y); y += 6;
+            doc.text(`FCR: ${data.fcr}`, marginX, y); y += 6;
+            
             doc.save(`petok-predict-${new Date().toISOString().split('T')[0]}.pdf`);
             this.notify('PDF Downloaded!', 'success');
         } catch (e) {
@@ -1858,77 +1057,33 @@ class ChickenCalc {
 
     modal(title, content) {
         this.closeModal();
-
         const overlay = document.createElement('div');
         overlay.id = 'petokModal';
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.background = 'rgba(47, 81, 50, 0.38)';
-        overlay.style.zIndex = '10000';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.setAttribute('role', 'dialog');
-        overlay.setAttribute('aria-modal', 'true');
-
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(47,81,50,0.38);z-index:10000;display:flex;align-items:center;justify-content:center';
+        
         const container = document.createElement('div');
-        container.style.background = 'rgba(255,255,252,0.96)';
-        container.style.border = '1px solid rgba(137,173,146,0.4)';
-        container.style.borderRadius = '12px';
-        container.style.padding = '24px';
-        container.style.maxWidth = '600px';
-        container.style.width = '90%';
-        container.style.maxHeight = '80vh';
-        container.style.overflowY = 'auto';
-        container.style.boxShadow = '0 24px 48px rgba(96,122,86,0.24)';
-
+        container.style.cssText = 'background:rgba(255,255,252,0.96);border:1px solid rgba(137,173,146,0.4);border-radius:12px;padding:24px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 24px 48px rgba(96,122,86,0.24)';
+        
         const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.marginBottom = '16px';
-
-        const titleEl = document.createElement('h3');
-        titleEl.style.margin = '0';
-        titleEl.style.color = '#2F5132';
-        titleEl.textContent = title;
-
-        const closeBtn = document.createElement('button');
-        closeBtn.style.background = 'none';
-        closeBtn.style.border = 'none';
-        closeBtn.style.fontSize = '1.5rem';
-        closeBtn.style.cursor = 'pointer';
-    closeBtn.style.color = '#567A60';
-        closeBtn.setAttribute('aria-label', 'Tutup');
-        closeBtn.innerHTML = '&times;';
-
+        header.style.cssText = 'display:flex;justify-content:space-between;margin-bottom:16px';
+        header.innerHTML = `<h3 style="margin:0;color:#2F5132">${title}</h3><button id="modalClose" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#567A60">&times;</button>`;
+        
         const body = document.createElement('div');
         body.className = 'petok-modal-body';
         body.innerHTML = content;
 
-        header.appendChild(titleEl);
-        header.appendChild(closeBtn);
         container.appendChild(header);
         container.appendChild(body);
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        closeBtn.addEventListener('click', () => this.closeModal());
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) this.closeModal();
-        });
+        document.getElementById('modalClose').addEventListener('click', () => this.closeModal());
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) this.closeModal(); });
     }
 
     closeModal() {
-        // Reset captcha if exists
         if (captchaWidgetId !== null && window.hcaptcha) {
-            try {
-                window.hcaptcha.reset(captchaWidgetId);
-            } catch (e) {
-                // Ignore if widget not found
-            }
+            try { window.hcaptcha.reset(captchaWidgetId); } catch (e) {}
             captchaWidgetId = null;
         }
         document.getElementById('petokModal')?.remove();
@@ -1937,115 +1092,9 @@ class ChickenCalc {
     notify(msg, type = 'info') {
         const div = document.createElement('div');
         div.textContent = msg;
-    div.style.cssText = `position:fixed;top:20px;right:20px;padding:16px 24px;border-radius:8px;z-index:10001;background:${type==='success'?'#3F8F5F':'#C8513A'};color:#fff;font-weight:500`;
+        div.className = `notification ${type}`;
         document.body.appendChild(div);
         setTimeout(() => div.remove(), 3000);
-    }
-
-    openAdvancedConfigurator() {
-        const size = this.advanced.farmSize || 'small';
-        const custom = this.advanced.custom || {};
-        const extras = Array.isArray(custom.extras) ? custom.extras : [];
-
-        const html = `
-            <div class="advanced-config">
-                <p style="color:#567A60;margin-bottom:12px">Pilih segmentasi kandang dan berikan detail tambahan agar rekomendasi biaya lebih akurat.</p>
-                <div class="farm-size-switch" id="farmSizeSwitch">
-                    <button type="button" class="farm-size-btn ${size==='small'?'active':''}" data-size="small">Kecil</button>
-                    <button type="button" class="farm-size-btn ${size==='medium'?'active':''}" data-size="medium">Menengah</button>
-                    <button type="button" class="farm-size-btn ${size==='large'?'active':''}" data-size="large">Besar</button>
-                    <button type="button" class="farm-size-btn ${size==='custom'?'active':''}" data-size="custom">Custom</button>
-                </div>
-                <div id="customFields" style="margin-top:16px;display:${size==='custom'?'grid':'none'};gap:12px">
-                    <div style="display:grid;gap:6px">
-                        <label>Panjang kandang (m)</label>
-                        <input type="number" id="customLength" min="1" step="0.5" value="${custom.length ?? ''}" placeholder="Misal 12">
-                    </div>
-                    <div style="display:grid;gap:6px">
-                        <label>Lebar kandang (m)</label>
-                        <input type="number" id="customWidth" min="1" step="0.5" value="${custom.width ?? ''}" placeholder="Misal 8">
-                    </div>
-                    <div style="display:grid;gap:6px">
-                        <label>Tinggi rata-rata (m)</label>
-                        <input type="number" id="customHeight" min="1" step="0.5" value="${custom.height ?? ''}" placeholder="Misal 2.8">
-                    </div>
-                    <div style="display:grid;gap:6px">
-                        <label>Sistem ventilasi</label>
-                        <select id="customVentilation">
-                            <option value="konvensional" ${custom.ventilation==='konvensional'?'selected':''}>Konvensional (ventilasi alami)</option>
-                            <option value="tunnel" ${custom.ventilation==='tunnel'?'selected':''}>Tunnel fan</option>
-                            <option value="mixed" ${custom.ventilation==='mixed'?'selected':''}>Campuran</option>
-                        </select>
-                    </div>
-                    <fieldset style="border:1px solid rgba(137,173,146,0.45);padding:12px;border-radius:10px;display:grid;gap:8px">
-                        <legend style="padding:0 6px;color:#3F8F5F;font-weight:600">Fitur tambahan</legend>
-                        ${[{
-                            key: 'autoBrooder', label: 'Ada pemanas otomatis atau gas brooder'
-                        }, {
-                            key: 'curtain', label: 'Menggunakan tirai/kasa untuk kontrol suhu'
-                        }, {
-                            key: 'fogger', label: 'Ada fogger atau sprayer pendingin'
-                        }, {
-                            key: 'lighting', label: 'Menggunakan lampu LED hemat energi'
-                        }].map(item => `
-                            <label style="display:flex;gap:8px;align-items:center">
-                                <input type="checkbox" data-extra="${item.key}" ${extras.includes(item.key)?'checked':''}>
-                                <span>${item.label}</span>
-                            </label>
-                        `).join('')}
-                    </fieldset>
-                </div>
-                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
-                    <button type="button" id="cancelAdvConfig" style="padding:10px 18px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567A60">Batal</button>
-                    <button type="button" id="saveAdvConfig" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer">Simpan & Update</button>
-                </div>
-            </div>
-        `;
-
-        this.modal('Pengaturan Advance', html);
-
-        const modal = document.querySelector('.petok-modal-body');
-        if (!modal) return;
-
-        const switchBtns = modal.querySelectorAll('.farm-size-btn');
-        const customFields = modal.querySelector('#customFields');
-        switchBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                switchBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const selected = btn.dataset.size;
-                if (!selected) return;
-                this.advanced.farmSize = selected;
-                if (customFields) {
-                    customFields.style.display = selected === 'custom' ? 'grid' : 'none';
-                }
-            });
-        });
-
-        modal.querySelector('#cancelAdvConfig')?.addEventListener('click', () => this.closeModal());
-        modal.querySelector('#saveAdvConfig')?.addEventListener('click', () => {
-            if (this.advanced.farmSize === 'custom') {
-                const len = Number(modal.querySelector('#customLength')?.value || 0) || null;
-                const wid = Number(modal.querySelector('#customWidth')?.value || 0) || null;
-                const hei = Number(modal.querySelector('#customHeight')?.value || 0) || null;
-                const vent = modal.querySelector('#customVentilation')?.value || 'konvensional';
-                const chosen = Array.from(modal.querySelectorAll('[data-extra]'))
-                    .filter(el => el.checked)
-                    .map(el => el.getAttribute('data-extra'));
-                this.advanced.custom = {
-                    length: len,
-                    width: wid,
-                    height: hei,
-                    ventilation: vent,
-                    extras: chosen
-                };
-            }
-
-            this.persistAdvancedSettings();
-            this.closeModal();
-            this.applyAdvancedState();
-            this.generateAdvancedAdvice();
-        });
     }
 
     setText(id, text) {
@@ -2054,49 +1103,40 @@ class ChickenCalc {
     }
 
     fmt(num) {
-        return new Intl.NumberFormat('id-ID', {
-            style: 'currency',
-            currency: 'IDR',
-            minimumFractionDigits: 0
-        }).format(num);
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+    }
+
+    estimateHarvestDays(fcr, weight, chickenType) {
+        const type = (chickenType || '').toLowerCase();
+        const isBroiler = type === 'broiler';
+        const W = Math.max(0.6, Math.min(3.0, Number(weight) || 1.0));
+        const F = Math.max(1.4, Math.min(3.2, Number(fcr) || (isBroiler ? 1.8 : 2.4)));
+        let a, b, c, fRef, k;
+        if (isBroiler) { a = 25; b = 0.85; c = 6; fRef = 1.7; k = 0.12; } 
+        else { a = 58; b = 0.70; c = 8; fRef = 2.3; k = 0.08; }
+        let baseDays = a * Math.pow(W, b) + c;
+        const fAdj = 1 + k * (F - fRef);
+        let days = Math.max(14, Math.round(baseDays * fAdj));
+        const spread = days < 40 ? 1 : 2;
+        return { min: Math.max(1, days - spread), center: days, max: days + spread };
     }
 }
-
-// ========================================
-// CAPTCHA CALLBACK
-// ========================================
 
 window.onCaptchaSuccess = function(token) {
     const calc = window.chickenCalcInstance;
     if (calc) calc.saveWithCaptcha(token);
 };
 
-// ========================================
-// INIT
-// ========================================
-
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🐔 Petok Predict Starting...');
-    
     try {
-        // Load config first
         await loadConfig();
-        console.log('✅ Config loaded');
-        
-        // Initialize auth and calculator
         initGoogleAuth();
         window.chickenCalcInstance = new ChickenCalc();
         await updateAuthUI();
-        
-        // Setup auth state listener
         const sb = getSb();
-        sb.auth.onAuthStateChange(async (_, session) => {
-            await updateAuthUI(session);
-        });
-        
-        console.log('✅ Ready');
+        sb.auth.onAuthStateChange(async (_, session) => { await updateAuthUI(session); });
     } catch (error) {
-        console.error('❌ Initialization failed:', error);
+        console.error('Init failed:', error);
     }
 });
 

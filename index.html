@@ -28,29 +28,14 @@
     <link rel="alternate" hreflang="id" href="https://petokpredict.me/">
     <link rel="alternate" hreflang="x-default" href="https://petokpredict.me/">
     
-    <!-- Favicon -->
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://accounts.google.com" crossorigin>
     <link rel="preconnect" href="https://js.hcaptcha.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="icon" href="petokpredict.png" type="image/png">
-    <link rel="apple-touch-icon" href="petokpredict.png">
-    <link rel="shortcut icon" href="petokpredict.png" type="image/png">
-    
-        <!-- Normalize unexpected paths to root so the URL becomes '/' on unknown routes -->
-        <script>
-            (function(){
-                try {
-                    var p = window.location.pathname || '/';
-                    // Keep API and the root as-is; anything else gets normalized to '/'
-                    if (p !== '/' && !p.startsWith('/api/')) {
-                        history.replaceState(null, '', '/');
-                    }
-                } catch (e) { /* noop */ }
-            })();
-        </script>
+    <!-- Dynamic SVG Favicon -->
+    <link rel="icon" href="pp.svg" type="image/svg+xml">
     
     <!-- External Libraries -->
         <!-- jsPDF for export -->
@@ -110,35 +95,32 @@
         </script>
 </head>
 <body>
-    <div class="page-shell">
-        <header class="site-header">
-            <div class="hero">
-                <div class="brand">
-                    <img src="petokpredict.png" alt="PetokPredict Logo" class="logo" width="70" height="70">
-                    <div class="brand-copy">
-                        <span class="brand-eyebrow">Peternakan berbasis data</span>
-                        <h1>Petok Predict</h1>
-                        <p class="brand-lead">Atur asumsi panen, pantau biaya, dan hitung potensi profit tanpa ribet.</p>
+    <!-- Global Navbar -->
+    <nav class="top-nav" role="navigation" aria-label="Navbar utama">
+        <div class="top-nav__inner">
+            <div class="top-nav__left">
+                <img src="pp.svg" alt="PetokPredict Logo" class="logo" width="40" height="40">
+                <span class="app-name">Petok Predict</span>
+            </div>
+            <div class="top-nav__center">
+                <a href="#kalkulator" class="nav-link active">Kalkulator</a>
+                <button id="quickHistory" class="nav-link btn-link" type="button">History</button>
+                <a href="#tentang" class="nav-link">Tentang</a>
+            </div>
+            <div class="top-nav__right">
+                <div id="login-btn" class="google-signin-container"></div>
+                <div id="user-box" class="user-box" style="display: none;">
+                    <img id="user-avatar" class="user-avatar profile-trigger" alt="Foto Profil" style="display: none;" role="button" tabindex="0">
+                    <div class="user-info">
+                        <span>Halo, <span id="user-name">User</span></span>
                     </div>
+                    <button id="logout-btn" class="auth-btn logout-btn">Keluar</button>
                 </div>
-                <div class="auth-area">
-                    <!-- Login Button - Content will be replaced by Google -->
-                    <div id="login-btn" class="google-signin-container"></div>
+            </div>
+        </div>
+    </nav>
 
-                    <!-- User Info Box (shown when logged in) -->
-                    <div id="user-box" class="user-box" style="display: none;">
-                        <img id="user-avatar" class="user-avatar profile-trigger" alt="Foto Profil" style="display: none;" role="button" tabindex="0">
-                        <div class="user-info">
-                            <span>Halo, <span id="user-name">User</span></span>
-                        </div>
-                        <button id="logout-btn" class="auth-btn logout-btn">Keluar</button>
-                    </div>
-                </div>
-            </div>
-            <div class="hero-footnote">
-                <p>Harga pasar di-update otomatis, biaya tambahan disesuaikan populasi, dan semua perhitungan tetap akurat seperti sebelumnya.</p>
-            </div>
-        </header>
+    <div class="page-shell">
 
         <main class="main-content">
             <!-- Dashboard Kalkulasi -->
@@ -170,7 +152,7 @@
                 <div class="dash-controls">
                     <div class="input-group">
                         <label for="chickenType">Jenis Ayam</label>
-                        <div class="tab-buttons" id="chickenTabs">
+                        <div class="tab-buttons mobile-scroll" id="chickenTabs">
                             <button type="button" class="tab-btn active" data-type="kampung">Ayam Kampung</button>
                             <button type="button" class="tab-btn" data-type="broiler">Broiler</button>
                         </div>
@@ -184,9 +166,21 @@
                 <!-- Market Info Group -->
                 <div class="card-group single">
                     <div class="stat-card info">
-                        <p class="stat-title">Harga Pasar</p>
+                        <div class="stat-row">
+                            <p class="stat-title">Harga Pasar</p>
+                            <div class="inline-actions">
+                                <button id="btnEditMarket" class="chip-link" type="button">✏️ Edit</button>
+                            </div>
+                        </div>
                         <p class="stat-value" id="statJenis">Ayam Kampung</p>
                         <p class="stat-value" id="statHarga">Loading...</p>
+                        <div id="marketEditRow" class="edit-row" style="display:none">
+                            <label for="inputMarketPrice">Harga kustom (Rp/kg)</label>
+                            <div class="edit-inline">
+                                <input type="number" id="inputMarketPrice" min="0" step="100" placeholder="cth 35000" />
+                                <button id="btnApplyMarket" class="btn-action accent" type="button">Simpan</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -210,6 +204,11 @@
                         <p class="stat-title">Ekor Panen</p>
                         <p class="stat-value" id="statEkorPanen">–</p>
                         <small>Survival rate calculation</small>
+                    </div>
+                    <div class="stat-card info">
+                        <p class="stat-title">Perkiraan Umur Panen</p>
+                        <p class="stat-value" id="statHarvestEstimate">–</p>
+                        <small>(berdasarkan FCR & bobot target)</small>
                     </div>
                 </div>
 
@@ -266,7 +265,7 @@
                     </div>
                 </div>
                 <div class="tabs">
-                    <div class="tab-buttons">
+                    <div class="tab-buttons mobile-scroll">
                         <button class="tab-btn active" data-tab="asumsi" id="tabAsumsi">Asumsi Produksi</button>
                         <button class="tab-btn" data-tab="simulasi" id="tabSimulasi">Simulasi Skenario</button>
                     </div>
@@ -392,14 +391,6 @@
                             <div class="slider-header"><label>Biaya Vaksin & Obat</label><span class="slider-value" id="valVaccineCost">Rp 100.000</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeVaccineCost" min="0" max="3000000" step="25000" value="100000" />
-                            </div>
-                        </div>
-                        <div class="input-group">
-                            <label>Catatan Rekomendasi</label>
-                            <textarea id="advancedNotes" rows="3" readonly class="advanced-notes"></textarea>
-                            <div class="advanced-actions">
-                                <button type="button" id="openAdvancedConfigurator" class="btn-ghost">⚙️ Profil Kandang</button>
-                                <button type="button" id="regenAdvice" class="btn-regen">🔄 Regenerasi rekomendasi</button>
                             </div>
                         </div>
                       </div>

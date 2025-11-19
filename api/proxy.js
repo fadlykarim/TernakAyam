@@ -122,7 +122,7 @@ async function generateAdvancedAdvice(context) {
         },
         body: JSON.stringify({
             model: 'llama-3.1-8b-instant',
-            temperature: 0.4,
+            temperature: 0.2,
             max_tokens: 1200,
             messages: prompt
         })
@@ -163,12 +163,12 @@ function buildAdvisorPrompt(context) {
 
     const system = {
         role: 'system',
-        content: 'You are an expert poultry production consultant. Always respond with valid JSON only.'
+        content: 'You are an expert poultry production consultant. Output ONLY strict JSON (no prose, no markdown). Use realistic, conservative values. Respect provided inputs as hard anchors and keep variations narrow and monotonic.'
     };
 
-    const user = {
-        role: 'user',
-        content: `Berikan rekomendasi ringkas untuk kebutuhan energi, pemanas, dan vaksin pada peternakan ayam.
+        const user = {
+                role: 'user',
+                content: `Berikan rekomendasi ringkas untuk kebutuhan energi, pemanas, dan vaksin pada peternakan ayam.
 Balas dalam JSON dengan struktur:
 {
   "basis": "live" atau "carcass",
@@ -202,7 +202,13 @@ Balas dalam JSON dengan struktur:
   "notes": string
 }
 
-Gunakan rupiah. Sesuaikan dengan data berikut:
+Aturan ketat:
+- Jaga variasi sempit dan realistis; jangan mengubah input secara drastis.
+- Nilai harus dalam rentang wajar dan monoton: harvest_age_days logis terhadap populasi & tipe.
+- Jika farmSize "small" dan ventilasi sederhana, minimalkan pemanas.
+- Gunakan rupiah dan angka bulat (pembulatan ribuan bila relevan).
+
+Gunakan data berikut sebagai jangkar:
 Populasi: ${population}
 Jenis ayam: ${chickenType}
 Kategori kandang: ${farmSize}
@@ -210,7 +216,7 @@ Detail custom: ${JSON.stringify(customNeeds)}
 Dimensi kandang (m): panjang ${coop.length || '-'}, lebar ${coop.width || '-'}, tinggi ${coop.height || '-'}
 Ventilasi: ${coop.ventilation || 'tidak diketahui'}
 lokasi: ${JSON.stringify(location)}
-Jika kandang kecil benar-benar sederhana, minimalkan rekomendasi alat pemanas.`
+`
     };
 
     return [system, user];

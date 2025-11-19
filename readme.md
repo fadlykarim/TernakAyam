@@ -16,6 +16,22 @@ Kalkulator perhitungan ayam profesional dengan analisis keuntungan real-time. Ap
 - Export PDF: unduh ringkasan kalkulasi langsung dari dashboard
 - Ringkas & sederhana: 1 file JS utama, tanpa bundler
 
+## Pembaruan (UI & Logika)
+
+- Navbar penuh lebar (bukan kartu): brand kiri, menu tengah, profil kanan.
+- Edit/Reset harga: harga pasar dapat disesuaikan dengan tombol Edit dan tombol Kembalikan, lengkap dengan indikator "Default/Disesuaikan". Slider Harga Pakan & DOC juga menampilkan badge dan tombol Reset saat nilai berubah dari default.
+- Estimasi umur panen (FCR → hari): kartu ringkasan menampilkan "xx–yy hari, estimasi panen: dd MMM yyyy" berdasarkan FCR & bobot target dengan formula halus dan realistis.
+- Responsif: tombol-tombol mode/AI tidak pecah di layar kecil (scroll horizontal pills atau stack).
+
+### Estimasi Umur Panen (Ringkas)
+- Broiler: days ≈ 25·W^0.85 + 6 lalu dikalikan faktor FCR: (1 + 0.12·(FCR − 1.7))
+- Kampung: days ≈ 58·W^0.70 + 8 lalu dikalikan faktor FCR: (1 + 0.08·(FCR − 2.3))
+- Rentang ditampilkan ±1–2 hari tanpa random.
+
+### AI Advisor (Stabil)
+- Prompt diperketat: JSON-only, variasi sempit, monotonic, dan menghormati input pengguna sebagai jangkar.
+- Temperature diturunkan (0.2) dan nilai diklem di sisi klien.
+
 Catatan: Fitur yang memerlukan login/riwayat/profil membutuhkan Supabase yang sudah dikonfigurasi. Tanpa itu, kalkulator tetap dapat digunakan sepenuhnya di sisi klien.
 
 ## Teknologi
