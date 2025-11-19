@@ -199,7 +199,6 @@ async function logout() {
 function applyAuthState(session) {
     const loginContainer = document.getElementById('login-btn');
     const userBox = document.getElementById('user-box');
-    const userName = document.getElementById('user-name');
     const userAvatar = document.getElementById('user-avatar');
     const saveBtn = document.getElementById('saveCalculation');
     const historyBtn = document.getElementById('viewHistory');
@@ -209,7 +208,7 @@ function applyAuthState(session) {
         const identity = deriveUserIdentity(session.user);
         if (loginContainer) loginContainer.style.display = 'none';
         if (userBox) userBox.style.display = 'flex';
-        if (userName) userName.textContent = identity.fullName || session.user.email;
+        
         if (userAvatar) {
             if (identity.picture) {
                 userAvatar.src = identity.picture;
@@ -217,6 +216,8 @@ function applyAuthState(session) {
                 userAvatar.style.display = 'block';
                 if (userBox) userBox.classList.add('has-avatar');
             } else {
+                // Fallback if no avatar is present, maybe show a placeholder or just hide
+                // For now, following previous logic to hide if no image
                 userAvatar.removeAttribute('src');
                 userAvatar.style.display = 'none';
                 if (userBox) userBox.classList.remove('has-avatar');
