@@ -474,7 +474,7 @@ class ChickenCalc {
             const missingDimensions = !this.advanced.custom || !this.advanced.custom.length || !this.advanced.custom.width;
             const needsConfig = !this.advanced.adviceMeta?.lastSync || this.advanced.farmSize === 'custom' || (this.advanced.farmSize === 'small' && missingDimensions);
             if (needsConfig && !opts.skipConfigurator) {
-                setTimeout(() => this.openAdvancedConfigurator(), 120);
+                setTimeout(() => this.openAdvancedConfigurator(true), 120);
             }
             if (!this.advanced.adviceMeta?.lastSync && !opts.skipAdvice) {
                 setTimeout(() => this.generateAdvancedAdvice(), 200);
@@ -541,6 +541,37 @@ class ChickenCalc {
         simulasiTabBtn?.addEventListener('click', () => this.tab('simulasi'));
         if (asumsiTabBtn) asumsiTabBtn.setAttribute('aria-pressed', this.activeTab === 'asumsi' ? 'true' : 'false');
         if (simulasiTabBtn) simulasiTabBtn.setAttribute('aria-pressed', this.activeTab === 'simulasi' ? 'true' : 'false');
+
+        // Market Edit
+        const btnEditMarket = document.getElementById('btnEditMarket');
+        const marketEditRow = document.getElementById('marketEditRow');
+        const btnApplyMarket = document.getElementById('btnApplyMarket');
+        const inputMarketPrice = document.getElementById('inputMarketPrice');
+
+        if (btnEditMarket && marketEditRow) {
+            btnEditMarket.addEventListener('click', () => {
+                const isHidden = marketEditRow.style.display === 'none';
+                marketEditRow.style.display = isHidden ? 'grid' : 'none';
+                if (isHidden && inputMarketPrice) {
+                    inputMarketPrice.focus();
+                    if (this.price?.price) inputMarketPrice.value = this.price.price;
+                }
+            });
+        }
+
+        if (btnApplyMarket && inputMarketPrice) {
+            btnApplyMarket.addEventListener('click', () => {
+                const val = Number(inputMarketPrice.value);
+                if (val > 0) {
+                    this.price = { price: val, source: 'Manual Input' };
+                    this.calc();
+                    if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
+                        this.renderSim();
+                    }
+                    if (marketEditRow) marketEditRow.style.display = 'none';
+                }
+            });
+        }
 
         this.bindSliders();
         this.bindAdvancedControls();
@@ -609,9 +640,9 @@ class ChickenCalc {
             advConfigBtn.addEventListener('click', () => {
                 if (!this.advanced.enabled) {
                     this.toggleAdvancedMode(true, { skipConfigurator: true, skipAdvice: true });
-                    setTimeout(() => this.openAdvancedConfigurator(), 140);
+                    setTimeout(() => this.openAdvancedConfigurator(true), 140);
                 } else {
-                    this.openAdvancedConfigurator();
+                    this.openAdvancedConfigurator(false);
                 }
             });
         }
@@ -1950,7 +1981,7 @@ class ChickenCalc {
         setTimeout(() => div.remove(), 3000);
     }
 
-    openAdvancedConfigurator() {
+    openAdvancedConfigurator(isActivation = false) {
         const size = this.advanced.farmSize || 'small';
         const custom = this.advanced.custom || {};
         const extras = Array.isArray(custom.extras) ? custom.extras : [];
@@ -2030,7 +2061,12 @@ class ChickenCalc {
             });
         });
 
-        modal.querySelector('#cancelAdvConfig')?.addEventListener('click', () => this.closeModal());
+        modal.querySelector('#cancelAdvConfig')?.addEventListener('click', () => {
+            this.closeModal();
+            if (isActivation) {
+                this.toggleAdvancedMode(false, { skipConfigurator: true, skipAdvice: true });
+            }
+        });
         modal.querySelector('#saveAdvConfig')?.addEventListener('click', () => {
             if (this.advanced.farmSize === 'custom') {
                 const len = Number(modal.querySelector('#customLength')?.value || 0) || null;
