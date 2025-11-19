@@ -15,7 +15,7 @@ CREATE TABLE public.profiles (
     phone text,
     location text DEFAULT 'JABODETABEK',
     farm_name text, -- Nama peternakan user (optional)
-    farm_type text CHECK (farm_type IN ('small', 'medium', 'large', 'custom')) DEFAULT 'small',
+    farm_type text, -- Opsional: deskripsi tipe kandang (bebas, tidak pakai kategori small/medium/large)
     advanced_mode boolean DEFAULT false,
     advanced_config jsonb DEFAULT '{}'::jsonb,
     created_at timestamptz DEFAULT timezone('utc'::text, now()) NOT NULL,

@@ -157,7 +157,6 @@ function buildAdvisorPrompt(context) {
     const coop = context?.coop || {};
     const population = context?.population || 0;
     const chickenType = context?.chickenType || 'broiler';
-    const farmSize = context?.farmSize || 'small';
     const location = context?.location || {};
     const customNeeds = context?.customNeeds || [];
 
@@ -205,13 +204,12 @@ Balas dalam JSON dengan struktur:
 Aturan ketat:
 - Jaga variasi sempit dan realistis; jangan mengubah input secara drastis.
 - Nilai harus dalam rentang wajar dan monoton: harvest_age_days logis terhadap populasi & tipe.
-- Jika farmSize "small" dan ventilasi sederhana, minimalkan pemanas.
+- Jika dimensi kandang kecil dan ventilasi sederhana, minimalkan pemanas.
 - Gunakan rupiah dan angka bulat (pembulatan ribuan bila relevan).
 
 Gunakan data berikut sebagai jangkar:
 Populasi: ${population}
 Jenis ayam: ${chickenType}
-Kategori kandang: ${farmSize}
 Detail custom: ${JSON.stringify(customNeeds)}
 Dimensi kandang (m): panjang ${coop.length || '-'}, lebar ${coop.width || '-'}, tinggi ${coop.height || '-'}
 Ventilasi: ${coop.ventilation || 'tidak diketahui'}

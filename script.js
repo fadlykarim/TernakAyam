@@ -326,7 +326,6 @@ class ChickenCalc {
                     vaccineCost: saved.vaccineCost ?? 100000,
                     electricityCost: saved.electricityCost ?? 0,
                     notes: saved.notes || '',
-                    farmSize: saved.farmSize || 'small',
                     custom: saved.custom || {
                         length: null,
                         width: null,
@@ -358,7 +357,6 @@ class ChickenCalc {
             vaccineCost: 100000,
             electricityCost: 0,
             notes: '',
-            farmSize: 'small',
             custom: {
                 length: null,
                 width: null,
@@ -472,7 +470,7 @@ class ChickenCalc {
 
         if (nextState) {
             const missingDimensions = !this.advanced.custom || !this.advanced.custom.length || !this.advanced.custom.width;
-            const needsConfig = !this.advanced.adviceMeta?.lastSync || this.advanced.farmSize === 'custom' || (this.advanced.farmSize === 'small' && missingDimensions);
+            const needsConfig = !this.advanced.adviceMeta?.lastSync || missingDimensions;
             if (needsConfig && !opts.skipConfigurator) {
                 setTimeout(() => this.openAdvancedConfigurator(true), 120);
             }
@@ -672,7 +670,7 @@ class ChickenCalc {
             const payload = {
                 action: 'advanced-advice',
                 context: {
-                    farmSize: this.advanced.farmSize || 'small',
+                    farmSize: 'custom',
                     population: this.assumptions.pop,
                     chickenType: document.getElementById('chickenType')?.value || 'kampung',
                     coop: this.advanced.custom || {},
@@ -751,11 +749,7 @@ class ChickenCalc {
         if (data.heating) {
             if (data.heating.estimated_cost_idr !== undefined) {
                 const heatingSuggested = Math.max(0, asNumber(data.heating.estimated_cost_idr, this.advanced.heatingCost));
-                if (this.advanced.farmSize === 'small' && data.heating.needed === false) {
-                    energyTotal = 0;
-                } else {
-                    energyTotal = heatingSuggested;
-                }
+                energyTotal = heatingSuggested;
             }
             this.advanced.adviceMeta = {
                 ...this.advanced.adviceMeta,
@@ -1606,15 +1600,12 @@ class ChickenCalc {
             const displayName = p.full_name ?? identity.fullName ?? '';
             const displayPhone = p.phone ?? '';
             const displayFarmName = p.farm_name ?? '';
-            const farmTypeRaw = p.farm_type ?? '';
-            const displayFarmType = ['small', 'medium', 'large', 'custom'].includes(farmTypeRaw) ? farmTypeRaw : (this.advanced?.farmSize || 'small');
-            this.advanced.farmSize = displayFarmType;
             if (typeof p.advanced_mode === 'boolean') {
                 this.advanced.enabled = p.advanced_mode;
             }
             if (p.advanced_config && typeof p.advanced_config === 'object') {
                 const cfg = p.advanced_config;
-                const mapKeys = ['basis','dressing','processCost','harvestAge','wastagePct','shrinkagePct','laborCost','overheadCost','transportCost','heatingCost','vaccineCost','notes','farmSize'];
+                const mapKeys = ['basis','dressing','processCost','harvestAge','wastagePct','shrinkagePct','laborCost','overheadCost','transportCost','heatingCost','vaccineCost','notes'];
                 mapKeys.forEach(key => {
                     if (cfg[key] !== undefined && cfg[key] !== null) {
                         this.advanced[key] = cfg[key];
@@ -1677,7 +1668,6 @@ class ChickenCalc {
                         heatingCost: this.advanced.heatingCost,
                         vaccineCost: this.advanced.vaccineCost,
                         notes: this.advanced.notes,
-                        farmSize: this.advanced.farmSize,
                         custom: this.advanced.custom,
                         adviceMeta: this.advanced.adviceMeta
                     };
@@ -1686,7 +1676,7 @@ class ChickenCalc {
                         p_phone: document.getElementById('phone').value || null,
                         p_location: null,
                         p_farm_name: document.getElementById('farmName').value || null,
-                        p_farm_type: this.advanced.farmSize || null,
+                        p_farm_type: null,
                         p_advanced_mode: this.advanced.enabled,
                         p_advanced_config: advancedConfigPayload
                     });
@@ -1934,27 +1924,16 @@ class ChickenCalc {
         titleEl.style.color = '#2F5132';
         titleEl.textContent = title;
 
-        const closeBtn = document.createElement('button');
-        closeBtn.style.background = 'none';
-        closeBtn.style.border = 'none';
-        closeBtn.style.fontSize = '1.5rem';
-        closeBtn.style.cursor = 'pointer';
-    closeBtn.style.color = '#567A60';
-        closeBtn.setAttribute('aria-label', 'Tutup');
-        closeBtn.innerHTML = '&times;';
-
         const body = document.createElement('div');
         body.className = 'petok-modal-body';
         body.innerHTML = content;
 
         header.appendChild(titleEl);
-        header.appendChild(closeBtn);
         container.appendChild(header);
         container.appendChild(body);
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        closeBtn.addEventListener('click', () => this.closeModal());
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) this.closeModal();
         });
@@ -1982,20 +1961,14 @@ class ChickenCalc {
     }
 
     openAdvancedConfigurator(isActivation = false) {
-        const size = this.advanced.farmSize || 'small';
         const custom = this.advanced.custom || {};
         const extras = Array.isArray(custom.extras) ? custom.extras : [];
 
         const html = `
             <div class="advanced-config">
-                <p style="color:#567A60;margin-bottom:12px">Pilih segmentasi kandang dan berikan detail tambahan agar rekomendasi biaya lebih akurat.</p>
-                <div class="farm-size-switch" id="farmSizeSwitch">
-                    <button type="button" class="farm-size-btn ${size==='small'?'active':''}" data-size="small">Kecil</button>
-                    <button type="button" class="farm-size-btn ${size==='medium'?'active':''}" data-size="medium">Menengah</button>
-                    <button type="button" class="farm-size-btn ${size==='large'?'active':''}" data-size="large">Besar</button>
-                    <button type="button" class="farm-size-btn ${size==='custom'?'active':''}" data-size="custom">Custom</button>
-                </div>
-                <div id="customFields" style="margin-top:16px;display:${size==='custom'?'grid':'none'};gap:12px">
+                <p style="color:#567A60;margin-bottom:12px">Masukkan detail spesifikasi kandang Anda agar rekomendasi biaya lebih akurat.</p>
+                
+                <div id="customFields" style="margin-top:16px;display:grid;gap:12px">
                     <div style="display:grid;gap:6px">
                         <label>Panjang kandang (m)</label>
                         <input type="number" id="customLength" min="1" step="0.5" value="${custom.length ?? ''}" placeholder="Misal 12">
@@ -2046,21 +2019,6 @@ class ChickenCalc {
         const modal = document.querySelector('.petok-modal-body');
         if (!modal) return;
 
-        const switchBtns = modal.querySelectorAll('.farm-size-btn');
-        const customFields = modal.querySelector('#customFields');
-        switchBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                switchBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                const selected = btn.dataset.size;
-                if (!selected) return;
-                this.advanced.farmSize = selected;
-                if (customFields) {
-                    customFields.style.display = selected === 'custom' ? 'grid' : 'none';
-                }
-            });
-        });
-
         modal.querySelector('#cancelAdvConfig')?.addEventListener('click', () => {
             this.closeModal();
             if (isActivation) {
@@ -2068,22 +2026,21 @@ class ChickenCalc {
             }
         });
         modal.querySelector('#saveAdvConfig')?.addEventListener('click', () => {
-            if (this.advanced.farmSize === 'custom') {
-                const len = Number(modal.querySelector('#customLength')?.value || 0) || null;
-                const wid = Number(modal.querySelector('#customWidth')?.value || 0) || null;
-                const hei = Number(modal.querySelector('#customHeight')?.value || 0) || null;
-                const vent = modal.querySelector('#customVentilation')?.value || 'konvensional';
-                const chosen = Array.from(modal.querySelectorAll('[data-extra]'))
-                    .filter(el => el.checked)
-                    .map(el => el.getAttribute('data-extra'));
-                this.advanced.custom = {
-                    length: len,
-                    width: wid,
-                    height: hei,
-                    ventilation: vent,
-                    extras: chosen
-                };
-            }
+            const len = Number(modal.querySelector('#customLength')?.value || 0) || null;
+            const wid = Number(modal.querySelector('#customWidth')?.value || 0) || null;
+            const hei = Number(modal.querySelector('#customHeight')?.value || 0) || null;
+            const vent = modal.querySelector('#customVentilation')?.value || 'konvensional';
+            const chosen = Array.from(modal.querySelectorAll('[data-extra]'))
+                .filter(el => el.checked)
+                .map(el => el.getAttribute('data-extra'));
+            
+            this.advanced.custom = {
+                length: len,
+                width: wid,
+                height: hei,
+                ventilation: vent,
+                extras: chosen
+            };
 
             this.persistAdvancedSettings();
             this.closeModal();
