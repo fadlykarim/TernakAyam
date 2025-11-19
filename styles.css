@@ -50,42 +50,44 @@ body {
     top: 0;
     z-index: 50;
     width: 100%;
-    background: rgba(255, 255, 255, 0.75);
-    backdrop-filter: blur(16px) saturate(180%);
-    -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
 }
 .top-nav__inner {
     max-width: 1180px;
     margin: 0 auto;
-    padding: 14px 24px;
+    padding: 10px 24px;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 12px;
 }
 .top-nav__left { display:flex; align-items:center; gap:12px; }
-.top-nav__left .logo { filter: brightness(0); }
+.top-nav__left .logo { 
+    filter: brightness(0); 
+    width: 32px;
+    height: 32px;
+}
 .top-nav__left, .top-nav__center, .top-nav__right { min-width: 0; }
-.app-name { font-weight: 700; color: var(--primary); letter-spacing: -0.02em; font-size: 1.1rem; }
+.app-name { font-weight: 700; color: #000; letter-spacing: -0.02em; font-size: 1.1rem; }
 .top-nav__center { display:flex; align-items:center; gap:8px; justify-content:center; }
 .nav-link { 
-    color: var(--text-muted); 
+    color: #666; 
     text-decoration: none; 
-    font-weight: 600; 
-    padding: 8px 16px;
-    border-radius: 100px;
+    font-weight: 500; 
+    padding: 6px 12px;
+    border-radius: 6px;
     transition: all 0.2s ease;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
 }
 .nav-link:hover {
-    color: var(--primary);
-    background: rgba(63, 143, 95, 0.08);
+    color: #000;
+    background: rgba(0, 0, 0, 0.04);
 }
 .nav-link.active { 
-    color: var(--primary); 
-    background: rgba(63, 143, 95, 0.12);
+    color: #000; 
+    background: rgba(0, 0, 0, 0.06);
 }
 .btn-link { background: none; border: none; cursor: pointer; font: inherit; }
 
@@ -261,10 +263,26 @@ body:not(.auth-ready) .auth-area {
 
 .google-signin-container {
     min-height: 46px;
-    width: 240px;
+    width: auto;
+    max-width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    overflow: hidden;
+}
+
+.simple-icon {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    vertical-align: middle;
+    color: #000;
+}
+
+.btn-action .simple-icon {
+    margin-right: 6px;
 }
 
 .user-box {

@@ -144,10 +144,9 @@ async function initGoogleAuth() {
             google.accounts.id.renderButton(
                 loginContainer,
                 {
-                    theme: 'filled_blue',
+                    theme: 'outline',
                     size: 'large',
                     text: 'signin_with',
-                    width: 240,
                     logo_alignment: 'left'
                 }
             );
@@ -241,10 +240,9 @@ function applyAuthState(session) {
                 google.accounts.id.renderButton(
                     loginContainer,
                     {
-                        theme: 'filled_blue',
+                        theme: 'outline',
                         size: 'large',
                         text: 'signin_with',
-                        width: 240,
                         logo_alignment: 'left'
                     }
                 );
@@ -636,7 +634,7 @@ class ChickenCalc {
         const button = document.getElementById('regenAdvice');
         if (button) {
             button.disabled = true;
-            button.textContent = '⏳ Menghitung...';
+            button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><path d="M4.5 3h15M4.5 21h15M6 3v4.5c0 2.5 2 4.5 4.5 4.5h3c2.5 0 4.5-2 4.5-4.5V3M6 21v-4.5c0-2.5 2-4.5 4.5-4.5h3c2.5 0 4.5 2 4.5 4.5V21"></path></svg> Menghitung...';
         }
 
         try {
@@ -677,7 +675,7 @@ class ChickenCalc {
         } finally {
             if (button) {
                 button.disabled = false;
-                button.textContent = '🔄 Regenerasi rekomendasi';
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg> Regenerasi rekomendasi';
             }
         }
     }
@@ -1148,7 +1146,9 @@ class ChickenCalc {
         let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">';
         scenarios.forEach(({ name, note, overrides }) => {
             const result = this.calcScenario(overrides);
-            const icon = result.profit == null ? '—' : (result.profit > 0 ? '📈' : '📉');
+            const iconUp = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
+            const iconDown = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+            const icon = result.profit == null ? '—' : (result.profit > 0 ? iconUp : iconDown);
             const col = result.profit == null ? '#567A60' : (result.profit > 0 ? '#3F8F5F' : '#C8513A');
             const costPerBird = result.harvest > 0 ? Math.round(result.totalCost / result.harvest) : null;
             const marginLabel = result.margin != null ? `${(result.margin * 100).toFixed(1)}%` : '—';
@@ -1170,7 +1170,7 @@ class ChickenCalc {
                         <div><b>Break-even:</b> ${fmtCurrency(result.breakEven)}</div>
                         <div><b>Basis Harga:</b> ${result.basis === 'carcass' ? 'Karkas' : 'Bobot hidup'}</div>
                         <div><b>Pendapatan:</b> ${fmtCurrency(result.revenue)}</div>
-                        <div style="font-weight:700;color:${col}"><b>Profit:</b> ${icon} ${fmtCurrency(result.profit)}</div>
+                        <div style="font-weight:700;color:${col};display:flex;align-items:center;gap:6px"><b>Profit:</b> ${icon} ${fmtCurrency(result.profit)}</div>
                         <div><b>Margin:</b> ${marginLabel}</div>
                     </div>
                 </div>
@@ -1206,7 +1206,7 @@ class ChickenCalc {
                 <div id="hcaptcha-container"></div>
             </div>
             <div id="notesStep" style="display:none">
-                <p style="color:#567a60;margin-bottom:12px">✅ Verifikasi berhasil!</p>
+                <p style="color:#567a60;margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Verifikasi berhasil!</p>
                 <label style="display:block;margin-bottom:8px;font-weight:500;color:#24412F">Catatan (opsional):</label>
                 <textarea id="notesInput" placeholder="Tambahkan catatan untuk perhitungan ini..." style="width:100%;min-height:80px;padding:12px;border:1px solid rgba(137,173,146,0.4);border-radius:8px;font-family:inherit;resize:vertical;background:rgba(255,255,254,0.84)"></textarea>
                 <div style="display:flex;gap:12px;margin-top:16px;justify-content:flex-end">
@@ -1385,9 +1385,15 @@ class ChickenCalc {
             let html = '<div style="max-height:400px;overflow-y:auto">';
             history.forEach(c => {
                 const date = new Date(c.calculation_date).toLocaleDateString('id-ID');
-                const icon = c.keuntungan_bersih > 0 ? '📈' : '📉';
+                const iconUp = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
+                const iconDown = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
+                const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
-                const star = c.is_favorite ? '⭐' : '☆';
+                
+                const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+                const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+                const star = c.is_favorite ? starFilled : starOutline;
+                
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
@@ -1398,10 +1404,10 @@ class ChickenCalc {
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer">${star}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#e0b24b">${star}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60">${date}${basisInfo}</div>
-                                <div style="font-weight:600;color:${col}">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
+                                <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
                                 ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem">"${c.notes}"</div>` : ''}
                             </div>
                             <div style="display:flex;flex-direction:column;gap:4px">
@@ -1440,7 +1446,9 @@ class ChickenCalc {
                     console.error('Toggle favorite error:', error);
                     return;
                 }
-                e.target.textContent = newStatus ? '⭐' : '☆';
+                const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+                const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+                e.target.innerHTML = newStatus ? starFilled : starOutline;
             });
         });
 
