@@ -201,9 +201,10 @@ function applyAuthState(session) {
     const userBox = document.getElementById('user-box');
     const userName = document.getElementById('user-name');
     const userAvatar = document.getElementById('user-avatar');
-    const saveBtn = document.getElementById('saveCalculation');
-    const historyBtn = document.getElementById('viewHistory');
-    const saveInfo = document.getElementById('saveInfo');
+    // Buttons are now always visible, but gated by checkAuth()
+    // const saveBtn = document.getElementById('saveCalculation');
+    // const historyBtn = document.getElementById('viewHistory');
+    // const saveInfo = document.getElementById('saveInfo');
 
     if (session?.user) {
         const identity = deriveUserIdentity(session.user);
@@ -222,9 +223,9 @@ function applyAuthState(session) {
                 if (userBox) userBox.classList.remove('has-avatar');
             }
         }
-        if (saveBtn) saveBtn.style.display = 'inline-block';
-        if (historyBtn) historyBtn.style.display = 'inline-block';
-        if (saveInfo) saveInfo.style.display = 'inline';
+        // if (saveBtn) saveBtn.style.display = 'inline-block';
+        // if (historyBtn) historyBtn.style.display = 'inline-block';
+        // if (saveInfo) saveInfo.style.display = 'inline';
         localStorage.setItem('pp_user', JSON.stringify({
             id: session.user.id,
             email: session.user.email,
@@ -255,9 +256,10 @@ function applyAuthState(session) {
             userAvatar.style.display = 'none';
         }
         if (userBox) userBox.classList.remove('has-avatar');
-        if (saveBtn) saveBtn.style.display = 'none';
-        if (historyBtn) historyBtn.style.display = 'none';
-        if (saveInfo) saveInfo.style.display = 'none';
+        // Buttons remain visible
+        // if (saveBtn) saveBtn.style.display = 'none';
+        // if (historyBtn) historyBtn.style.display = 'none';
+        // if (saveInfo) saveInfo.style.display = 'none';
         localStorage.removeItem('pp_user');
     }
 
@@ -298,7 +300,67 @@ class ChickenCalc {
         this.advanced = this.loadAdvancedSettings();
         this.profileLoading = false;
         this.activeTab = 'asumsi';
+        this.aiGenCount = 0;
         this.init();
+    }
+
+    checkAuth() {
+        const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
+        if (user) return true;
+        this.showLoginModal();
+        return false;
+    }
+
+    showLoginModal() {
+        const html = `
+            <div style="text-align:center;padding:20px">
+                <p style="margin-bottom:20px;color:#24412F;font-weight:500">Fitur ini khusus untuk pengguna terdaftar.</p>
+                <div id="modal-login-btn" style="display:flex;justify-content:center;min-height:44px"></div>
+                <p style="margin-top:16px;font-size:0.9rem;color:#567a60">Silakan login dengan Google untuk melanjutkan.</p>
+            </div>
+        `;
+        this.modal('Login Diperlukan', html);
+        
+        setTimeout(() => {
+            if (window.google?.accounts?.id) {
+                google.accounts.id.renderButton(
+                    document.getElementById('modal-login-btn'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        logo_alignment: 'left'
+                    }
+                );
+            }
+        }, 100);
+    }
+
+    promptCaptchaAsync(title = 'Verifikasi Keamanan') {
+        return new Promise((resolve) => {
+            const html = `
+                <div id="captchaStep" style="text-align:center">
+                    <p style="color:#567a60;margin-bottom:16px">Mohon verifikasi bahwa Anda bukan robot:</p>
+                    <div id="hcaptcha-container-generic"></div>
+                </div>
+            `;
+            this.modal(title, html);
+            
+            window.onGenericCaptchaSuccess = (token) => {
+                this.closeModal();
+                resolve(token);
+            };
+
+            setTimeout(() => {
+                if (window.hcaptcha) {
+                    window.hcaptcha.render('hcaptcha-container-generic', {
+                        sitekey: CONFIG?.captchaKey || '',
+                        callback: 'onGenericCaptchaSuccess'
+                    });
+                }
+            }, 100);
+        });
     }
 
     init() {
@@ -454,6 +516,10 @@ class ChickenCalc {
     }
 
     toggleAdvancedMode(forceValue, opts = {}) {
+        if (forceValue === undefined && !this.checkAuth()) {
+            return this.advanced.enabled;
+        }
+
         const nextState = typeof forceValue === 'boolean' ? forceValue : !this.advanced.enabled;
         if (this.advanced.enabled === nextState) {
             this.syncAdvancedToggleUI();
@@ -658,6 +724,11 @@ class ChickenCalc {
         if (!this.advanced.enabled) {
             this.notify('Aktifkan mode advance dulu', 'info');
             return;
+        }
+
+        this.aiGenCount = (this.aiGenCount || 0) + 1;
+        if (this.aiGenCount % 3 === 0) {
+            await this.promptCaptchaAsync();
         }
 
         const button = document.getElementById('regenAdvice');
@@ -1227,11 +1298,7 @@ class ChickenCalc {
     }
 
     async save() {
-        const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
+        if (!this.checkAuth()) return;
 
         // Show captcha modal
         this.showCaptchaModal();
@@ -1389,11 +1456,7 @@ class ChickenCalc {
     }
 
     async showHistory() {
-        const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
+        if (!this.checkAuth()) return;
 
         const loadingHtml = `
             <div style="text-align:center;padding:40px;color:#567a60">
@@ -1714,6 +1777,8 @@ class ChickenCalc {
     }
 
     exportPDF() {
+        if (!this.checkAuth()) return;
+
         const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
         if (!jsPDF) {
             this.notify('PDF lib not loaded', 'error');
