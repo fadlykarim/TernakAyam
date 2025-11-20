@@ -246,22 +246,13 @@ body:not(.auth-ready) .auth-area {
 }
 
 .google-signin-container {
-    height: 44px;
-    min-width: 200px;
+    min-height: 46px;
+    min-width: 210px;
+    width: auto;
+    max-width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    overflow: hidden;
-}
-
-.modal-google-btn {
-    height: 44px;
-    min-width: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto;
-    overflow: hidden;
 }
 
 .simple-icon {

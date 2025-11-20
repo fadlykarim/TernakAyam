@@ -235,20 +235,6 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
-            // Re-render button on logout only if not already rendered
-            if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
-                loginContainer.innerHTML = '';
-                google.accounts.id.renderButton(
-                    loginContainer,
-                    {
-                        theme: 'outline',
-                        size: 'large',
-                        text: 'signin',
-                        logo_alignment: 'left'
-                    }
-                );
-                googleButtonRendered = true;
-            }
         }
         if (userBox) userBox.style.display = 'none';
         if (userAvatar) {
@@ -315,7 +301,7 @@ class ChickenCalc {
         const html = `
             <div style="text-align:center;padding:20px">
                 <p style="margin-bottom:20px;color:#24412F;font-weight:500">Fitur ini khusus untuk pengguna terdaftar.</p>
-                <div id="modal-login-btn" class="modal-google-btn"></div>
+                <div id="modal-login-btn" style="display:flex;justify-content:center;min-height:44px"></div>
                 <p style="margin-top:16px;font-size:0.9rem;color:#567a60">Silakan login dengan Google untuk melanjutkan.</p>
             </div>
         `;
