@@ -246,9 +246,8 @@ body:not(.auth-ready) .auth-area {
 }
 
 .google-signin-container {
-    min-height: 46px;
-    width: auto;
-    max-width: 100%;
+    height: 44px;
+    min-width: 190px; /* Reserve space to prevent layout shift */
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -276,17 +275,6 @@ body:not(.auth-ready) .auth-area {
     background: transparent;
     border: none;
     box-shadow: none;
-    min-height: 46px; /* Match google-signin-container height to prevent layout shift */
-}
-
-/* Prevent FOUC in navbar auth section */
-body:not(.auth-ready) .top-nav__right {
-    opacity: 0;
-    pointer-events: none;
-}
-
-.top-nav__right {
-    transition: opacity 0.3s ease;
 }
 
 .user-avatar {
