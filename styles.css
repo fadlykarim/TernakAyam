@@ -770,6 +770,7 @@ body.logged-in .dashboard {
 input[type=range] {
     width: 100%;
     margin-top: 8px;
+    -webkit-appearance: none;
     appearance: none;
     height: 4px;
     border-radius: 999px;
@@ -777,8 +778,8 @@ input[type=range] {
     border: none;
 }
 
-input[type=range]::-webkit-slider-thumb,
-input[type=range]::-moz-range-thumb {
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
     appearance: none;
     width: 18px;
     height: 18px;
@@ -787,10 +788,17 @@ input[type=range]::-moz-range-thumb {
     border: 2px solid var(--accent);
     cursor: pointer;
     transition: transform 0.2s ease;
+    margin-top: -7px;
 }
 
-input[type=range]::-webkit-slider-thumb {
-    margin-top: -7px;
+input[type=range]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(255, 255, 252, 0.96);
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    transition: transform 0.2s ease;
 }
 
 input[type=range]::-webkit-slider-thumb:hover,
