@@ -163,6 +163,7 @@ body {
     border: 1px solid rgba(137,173,146,0.4);
     cursor: pointer;
     transition: background 0.2s, border 0.2s, box-shadow 0.2s, opacity 0.22s cubic-bezier(.4,0,.2,1);
+    will-change: opacity, background;
     padding: 0;
     flex-shrink: 0;
 }
@@ -182,6 +183,7 @@ body {
     background: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     transition: transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s;
+    will-change: transform;
 }
 
 .toggle-switch.active {
@@ -244,19 +246,22 @@ body:not(.auth-ready) .auth-area {
 }
 
 .google-signin-container {
-    height: 46px;
+    height: 44px;
     min-width: 200px;
-    width: auto;
-    max-width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    transform: translateZ(0);
+    overflow: hidden;
 }
 
-.google-signin-container iframe {
-    transition: none !important;
-    transform: none !important;
+.modal-google-btn {
+    height: 44px;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    overflow: hidden;
 }
 
 .simple-icon {
@@ -435,6 +440,7 @@ body.logged-in .dashboard {
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s, opacity 0.22s cubic-bezier(.4,0,.2,1);
+    will-change: opacity, background, color, box-shadow, transform;
 }
 
 .btn-action:hover {
@@ -529,6 +535,7 @@ body.logged-in .dashboard {
     flex-direction: column;
     gap: 8px;
     transition: box-shadow 0.2s, transform 0.2s, opacity 0.25s cubic-bezier(.4,0,.2,1);
+    will-change: opacity, transform;
     color: var(--text-strong);
 }
 
@@ -612,6 +619,7 @@ body.logged-in .dashboard {
     height: 100%;
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
     transition: width 0.32s cubic-bezier(.4,0,.2,1);
+    will-change: width;
 }
 
 /* Tabs */
@@ -659,6 +667,7 @@ body.logged-in .dashboard {
     color: var(--text-muted);
     cursor: pointer;
     transition: background 0.2s cubic-bezier(.4,0,.2,1), color 0.2s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1);
+    will-change: background, color, transform, box-shadow;
 }
 
 .tab-btn {
@@ -693,6 +702,7 @@ body.logged-in .dashboard {
     opacity: 0;
     transform: translateY(16px) scale(0.98);
     pointer-events: none;
+    will-change: opacity, transform;
 }
 .tab-content.active,
 .tab-content.is-leaving {
@@ -886,6 +896,7 @@ input[type=range]::-moz-range-track {
     color: var(--text-muted);
     font-weight: 600;
     transition: background 0.2s cubic-bezier(.4,0,.2,1), color 0.2s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1), border-color 0.2s cubic-bezier(.4,0,.2,1);
+    will-change: background, color, transform, border-color;
 }
 
 .farm-size-btn:hover {
