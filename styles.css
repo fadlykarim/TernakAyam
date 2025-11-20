@@ -247,7 +247,6 @@ body:not(.auth-ready) .auth-area {
 
 .google-signin-container {
     min-height: 46px;
-    min-width: 210px;
     width: auto;
     max-width: 100%;
     display: flex;

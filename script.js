@@ -147,7 +147,8 @@ async function initGoogleAuth() {
                     theme: 'outline',
                     size: 'large',
                     text: 'signin',
-                    logo_alignment: 'left'
+                    logo_alignment: 'left',
+                    click_listener: () => console.log('G-Signin clicked')
                 }
             );
             googleButtonRendered = true;
@@ -208,7 +209,13 @@ function applyAuthState(session) {
 
     if (session?.user) {
         const identity = deriveUserIdentity(session.user);
-        if (loginContainer) loginContainer.style.display = 'none';
+        if (loginContainer) {
+            loginContainer.style.display = 'none';
+            // Clear container and reset flag to ensure fresh render on logout
+            // This helps with mobile/Android issues where hidden iframes become unresponsive
+            loginContainer.innerHTML = '';
+            googleButtonRendered = false;
+        }
         if (userBox) userBox.style.display = 'flex';
         if (userName) userName.textContent = identity.fullName || session.user.email;
         if (userAvatar) {
@@ -235,6 +242,21 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
+            // Re-render button on logout only if not already rendered
+            if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
+                loginContainer.innerHTML = '';
+                google.accounts.id.renderButton(
+                    loginContainer,
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin',
+                        logo_alignment: 'left',
+                        click_listener: () => console.log('G-Signin clicked')
+                    }
+                );
+                googleButtonRendered = true;
+            }
         }
         if (userBox) userBox.style.display = 'none';
         if (userAvatar) {
@@ -316,7 +338,8 @@ class ChickenCalc {
                         size: 'large',
                         text: 'signin_with',
                         shape: 'rectangular',
-                        logo_alignment: 'left'
+                        logo_alignment: 'left',
+                        click_listener: () => console.log('Modal G-Signin clicked')
                     }
                 );
             }
