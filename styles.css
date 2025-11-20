@@ -252,7 +252,6 @@ body:not(.auth-ready) .auth-area {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    overflow: hidden;
 }
 
 .simple-icon {
@@ -1071,7 +1070,7 @@ input[type=range]::-moz-range-track {
 }
 
 @media (max-width: 600px) {
-    .top-nav__inner { grid-template-columns: 1fr auto; gap: 8px; }
+    .top-nav__inner { grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; }
     .top-nav__center { display: none; }
     .google-signin-container { width: auto; }
 
