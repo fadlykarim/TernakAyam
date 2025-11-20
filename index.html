@@ -120,15 +120,17 @@
             <!-- Dashboard Kalkulasi -->
             <section class="dashboard">
                 <div class="dash-header">
-                    <div>
+                    <div style="flex: 1; min-width: 280px; max-width: 700px;">
                         <h2>Rangkuman Usaha Ayam Kamu</h2>
-                        <p class="muted">Panel ringkas untuk membaca performa kandang tiap periode panen tanpa perlu bongkar spreadsheet.</p>
-                        <small class="helper-text">
+                        <p class="muted" style="max-width: none; margin-bottom: 8px; line-height: 1.5;">
+                            Panel ringkas untuk membaca performa kandang tiap periode panen tanpa perlu bongkar spreadsheet.
+                        </p>
+                        <p class="helper-text" style="margin-top: 0; line-height: 1.5;">
                             Semua biaya rutin—vaksin, vitamin, sampai listrik—langsung menyesuaikan populasi dan asumsi panen terbaru.
-                            <span id="saveInfo" class="helper-success" style="display: none;">
+                            <span id="saveInfo" class="helper-success" style="display: none; margin-left: 4px;">
                                 • Simpan kalkulasi ke riwayat kapan pun butuh bahan diskusi.
                             </span>
-                        </small>
+                        </p>
                     </div>
                     <div class="dash-actions">
                         <button id="saveCalculation" class="btn-action accent" style="display: none;">
