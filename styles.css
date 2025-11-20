@@ -247,7 +247,6 @@ body:not(.auth-ready) .auth-area {
 
 .google-signin-container {
     min-height: 46px;
-    min-width: 200px; /* Ensure enough space for the button */
     width: auto;
     max-width: 100%;
     display: flex;
@@ -1090,7 +1089,7 @@ input[type=range]::-moz-range-track {
 }
 
 @media (max-width: 600px) {
-    .top-nav__inner { grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; }
+    .top-nav__inner { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; }
     .top-nav__center { display: none; }
     .google-signin-container { width: auto; }
 
