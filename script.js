@@ -146,7 +146,7 @@ async function initGoogleAuth() {
                 {
                     theme: 'outline',
                     size: 'large',
-                    text: 'signin_with',
+                    text: 'signin',
                     logo_alignment: 'left'
                 }
             );
@@ -242,7 +242,7 @@ function applyAuthState(session) {
                     {
                         theme: 'outline',
                         size: 'large',
-                        text: 'signin_with',
+                        text: 'signin',
                         logo_alignment: 'left'
                     }
                 );
