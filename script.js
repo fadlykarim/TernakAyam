@@ -2086,6 +2086,52 @@ window.onCaptchaSuccess = function(token) {
 };
 
 // ========================================
+// TOOLTIP HANDLER
+// ========================================
+
+const tooltip = document.createElement('div');
+tooltip.className = 'global-tooltip';
+document.body.appendChild(tooltip);
+
+const showTooltip = (e) => {
+    const target = e.target.closest('[data-tooltip]');
+    if (!target) {
+        tooltip.classList.remove('active');
+        return;
+    }
+    
+    const text = target.getAttribute('data-tooltip');
+    if (!text) return;
+
+    tooltip.textContent = text;
+    tooltip.classList.add('active');
+    
+    const rect = target.getBoundingClientRect();
+    const tipRect = tooltip.getBoundingClientRect();
+    
+    let left = rect.left + (rect.width / 2) - (tipRect.width / 2);
+    let top = rect.top - tipRect.height - 8;
+
+    // Horizontal clamp
+    if (left < 10) left = 10;
+    if (left + tipRect.width > window.innerWidth - 10) {
+        left = window.innerWidth - tipRect.width - 10;
+    }
+
+    // Vertical flip
+    if (top < 10) {
+        top = rect.bottom + 8;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+};
+
+document.addEventListener('mouseover', showTooltip);
+document.addEventListener('touchstart', showTooltip, {passive: true});
+window.addEventListener('scroll', () => tooltip.classList.remove('active'), {passive: true});
+
+// ========================================
 // INIT
 // ========================================
 
