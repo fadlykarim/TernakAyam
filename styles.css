@@ -129,7 +129,7 @@ body {
 .advanced-toggle-row {
     margin: 18px 0 12px;
     padding: 14px 18px;
-    border: none;
+    border: 1px solid rgba(137,173,146,0.35);
     border-radius: 10px;
     background: rgba(255,255,254,0.88);
     display: flex;
@@ -206,7 +206,7 @@ body {
 .btn-ghost {
     padding: 8px 14px;
     border-radius: 6px;
-    border: none;
+    border: 1px solid rgba(63,143,95,0.4);
     background: rgba(255,255,254,0.92);
     color: #3F8F5F;
     cursor: pointer;
@@ -310,7 +310,7 @@ body:not(.auth-ready) .auth-area {
     padding: 10px 18px;
     font-size: 0.92rem;
     border-radius: var(--radius-sm);
-    border: none;
+    border: 1px solid rgba(63, 143, 95, 0.45);
     background: rgba(126, 214, 144, 0.22);
     cursor: pointer;
     color: var(--text-strong);
@@ -337,7 +337,7 @@ body:not(.auth-ready) .auth-area {
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid var(--border);
     background: rgba(126, 214, 144, 0.22);
     color: var(--text-strong);
     display: flex;
@@ -363,7 +363,7 @@ body:not(.auth-ready) .auth-area {
     background: var(--surface);
     border-radius: var(--radius-lg);
     padding: 32px;
-    border: none;
+    border: 1px solid rgba(137,173,146,0.18);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -372,7 +372,7 @@ body:not(.auth-ready) .auth-area {
 }
 
 body.logged-in .dashboard {
-    border-color: transparent;
+    border-color: rgba(50, 106, 79, 0.35);
     box-shadow: var(--shadow-md);
 }
 
@@ -423,7 +423,7 @@ body.logged-in .dashboard {
     gap: 8px;
     padding: 10px 18px;
     border-radius: var(--radius-sm);
-    border: none;
+    border: 1px solid var(--border);
     background: rgba(255, 255, 254, 0.95);
     color: var(--text-strong);
     font-size: 0.95rem;
@@ -508,7 +508,7 @@ body.logged-in .dashboard {
     padding: 18px;
     background: rgba(241, 249, 236, 0.36);
     border-radius: var(--radius-md);
-    border: none;
+    border: 1px solid rgba(137,173,146,0.18);
 }
 
 .card-group.single {
@@ -518,7 +518,7 @@ body.logged-in .dashboard {
 .stat-card {
     background: var(--surface-strong);
     border-radius: var(--radius-md);
-    border: none;
+    border: 1px solid rgba(137, 173, 146, 0.24);
     padding: 20px 22px;
     box-shadow: var(--shadow-sm);
     display: flex;
@@ -581,7 +581,7 @@ body.logged-in .dashboard {
 .stat-card.revenue,
 .stat-card.cost,
 .stat-card.info {
-    border-color: transparent;
+    border-color: var(--card-border);
     background: linear-gradient(150deg, var(--card-bg-start), var(--card-bg-end));
 }
 
@@ -625,7 +625,7 @@ body.logged-in .dashboard {
     background: rgba(255, 255, 254, 0.82);
     padding: 8px;
     border-radius: var(--radius-sm);
-    border: none;
+    border: 1px solid rgba(137,173,146,0.2);
     flex-wrap: wrap;
     width: 100%;
 }
@@ -638,7 +638,7 @@ body.logged-in .dashboard {
     gap: 8px;
     background: rgba(255, 255, 254, 0.82);
     padding: 6px;
-    border: none;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     flex-wrap: wrap;
 }
@@ -758,7 +758,7 @@ body.logged-in .dashboard {
 .slider-value {
     padding: 6px 10px;
     background: rgba(255, 255, 254, 0.95);
-    border: none;
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-weight: 600;
     font-size: 0.85rem;
@@ -825,7 +825,7 @@ input[type=range]::-moz-range-track {
 .advanced-banner {
     margin: 24px 0 12px;
     padding: 14px 16px;
-    border: none;
+    border: 1px dashed rgba(63, 143, 95, 0.28);
     background: rgba(126, 214, 144, 0.14);
     border-radius: var(--radius-sm);
     color: var(--primary);
@@ -853,7 +853,7 @@ input[type=range]::-moz-range-track {
     align-self: flex-start;
     padding: 10px 16px;
     border-radius: var(--radius-sm);
-    border: none;
+    border: 1px solid rgba(63, 143, 95, 0.45);
     background: rgba(126, 214, 144, 0.24);
     color: var(--accent);
     font-weight: 600;
@@ -878,7 +878,7 @@ input[type=range]::-moz-range-track {
 }
 
 .farm-size-btn {
-    border: none;
+    border: 1px solid rgba(63, 143, 95, 0.34);
     background: rgba(255, 255, 254, 0.96);
     border-radius: var(--radius-sm);
     padding: 12px;
@@ -897,7 +897,7 @@ input[type=range]::-moz-range-track {
 .farm-size-btn.active {
     background: rgba(63, 143, 95, 0.18);
     color: var(--text-strong);
-    border-color: transparent;
+    border-color: rgba(63, 143, 95, 0.5);
     transform: translateY(-1px);
 }
 
@@ -977,7 +977,7 @@ input[type=range]::-moz-range-track {
 .site-footer {
     background: var(--surface);
     border-radius: var(--radius-lg);
-    border: none;
+    border: 1px solid rgba(137,173,146,0.18);
     padding: 28px 32px;
     box-shadow: var(--shadow-sm);
     color: var(--text-strong);
