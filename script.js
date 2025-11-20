@@ -147,8 +147,8 @@ async function initGoogleAuth() {
                     theme: 'outline',
                     size: 'large',
                     text: 'signin',
-                    logo_alignment: 'left',
-                    click_listener: () => console.log('G-Signin clicked')
+                    shape: 'pill',
+                    logo_alignment: 'left'
                 }
             );
             googleButtonRendered = true;
@@ -251,8 +251,8 @@ function applyAuthState(session) {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin',
-                        logo_alignment: 'left',
-                        click_listener: () => console.log('G-Signin clicked')
+                        shape: 'pill',
+                        logo_alignment: 'left'
                     }
                 );
                 googleButtonRendered = true;
@@ -337,9 +337,8 @@ class ChickenCalc {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin_with',
-                        shape: 'rectangular',
-                        logo_alignment: 'left',
-                        click_listener: () => console.log('Modal G-Signin clicked')
+                        shape: 'pill',
+                        logo_alignment: 'left'
                     }
                 );
             }

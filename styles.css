@@ -247,11 +247,14 @@ body:not(.auth-ready) .auth-area {
 
 .google-signin-container {
     min-height: 46px;
+    min-width: 200px; /* Ensure enough space for the button */
     width: auto;
     max-width: 100%;
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .simple-icon {
