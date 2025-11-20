@@ -30,9 +30,9 @@ Set these environment variables in your Netlify dashboard:
 
 ### Option 2: Netlify CLI
 ```bash
-netlify env:set S_URL "https://udicazhrppqmnngyvqro.supabase.co"
-netlify env:set ANON_KEY "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-netlify env:set GCID "387582625697-qhcdu43poirgdvvakce0kfb7kuu4a4n7.apps.googleusercontent.com"
+netlify env:set S_URL "https://your-project.supabase.co"
+netlify env:set ANON_KEY "your-supabase-anon-key"
+netlify env:set GCID "your-google-client-id.apps.googleusercontent.com"
 netlify env:set CAPTCHA_KEY "your-hcaptcha-key"
 netlify env:set GROQ_API_KEY "gsk_live_..."
 ```
@@ -52,9 +52,9 @@ netlify env:set GROQ_API_KEY "gsk_live_..."
 ```javascript
 // script.js - EXPOSED to public!
 const CONFIG = {
-    SUPABASE_URL: 'https://udicazhrppqmnngyvqro.supabase.co',
+    SUPABASE_URL: 'https://your-project.supabase.co',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',  // 🚨 VISIBLE!
-    GOOGLE_CLIENT_ID: '387582625697-qhcdu43poirgdvvakce0kfb7kuu4a4n7.apps.googleusercontent.com'
+    GOOGLE_CLIENT_ID: 'your-google-client-id.apps.googleusercontent.com'
 };
 ```
 
@@ -121,7 +121,7 @@ Should return:
 {
   "supabaseUrl": "https://...",
   "supabaseKey": "eyJ...",
-  "googleClientId": "387582625697-...",
+  "googleClientId": "your-google-client-id...",
   "captchaKey": "..."
 }
 ```
