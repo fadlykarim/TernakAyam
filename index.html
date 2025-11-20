@@ -120,17 +120,13 @@
             <!-- Dashboard Kalkulasi -->
             <section class="dashboard">
                 <div class="dash-header">
-                    <div style="flex: 1; min-width: 280px; max-width: 700px;">
-                        <h2>Rangkuman Usaha Ayam Kamu</h2>
-                        <p class="muted" style="max-width: none; margin-bottom: 8px; line-height: 1.5;">
-                            Panel ringkas untuk membaca performa kandang tiap periode panen tanpa perlu bongkar spreadsheet.
-                        </p>
-                        <p class="helper-text" style="margin-top: 0; line-height: 1.5;">
-                            Semua biaya rutin—vaksin, vitamin, sampai listrik disesuaikan real-time sesuai dengan data kandangmu.
-                            <span id="saveInfo" class="helper-success" style="display: none; margin-left: 4px;">
-                                • Simpan kalkulasi ke riwayat kapan pun butuh bahan diskusi.
+                    <div style="flex:1;min-width:280px;max-width:700px;">
+                        <h2 style="display:flex;align-items:center;gap:6px">Rangkuman Usaha Ayam Kamu
+                            <span class="tooltip-icon" aria-label="Info ringkasan" tabindex="0">i
+                                <span class="tip">Panel ringkas untuk membaca performa kandang tiap periode panen tanpa perlu bongkar spreadsheet.<br><br>Semua biaya rutin—vaksin, vitamin, sampai listrik—langsung menyesuaikan populasi dan asumsi panen terbaru. Simpan kalkulasi ke riwayat kapan pun butuh bahan diskusi.</span>
                             </span>
-                        </p>
+                        </h2>
+                        <span id="saveInfo" class="helper-success" style="display:none;margin-top:4px;">Kalkulasi tersimpan.</span>
                     </div>
                     <div class="dash-actions">
                         <button id="saveCalculation" class="btn-action accent" style="display: none;">
@@ -197,14 +193,12 @@
                         </div>
                     </div>
                     <div class="stat-card info">
-                        <p class="stat-title">Ekor Panen</p>
+                        <p class="stat-title">Ekor Panen <span class="tooltip-icon" aria-label="Info ekor panen" tabindex="0">?<span class="tip">Jumlah ekor panen = populasi × survival rate (dibulatkan).</span></span></p>
                         <p class="stat-value" id="statEkorPanen">–</p>
-                        <small>Survival rate calculation</small>
                     </div>
                     <div class="stat-card info">
-                        <p class="stat-title">Perkiraan Umur Panen</p>
+                        <p class="stat-title">Perkiraan Umur Panen <span class="tooltip-icon" aria-label="Info umur panen" tabindex="0">?<span class="tip">Estimasi biologis umur panen dihitung dari bobot target & FCR berdasarkan jenis ayam (mode advance tidak mempengaruhi estimasi ini).</span></span></p>
                         <p class="stat-value" id="statHarvestEstimate">–</p>
-                        <small>(berdasarkan FCR & bobot target)</small>
                     </div>
                 </div>
 
@@ -256,8 +250,11 @@
             <section class="dashboard">
                 <div class="dash-header">
                     <div>
-                        <h2 id="secondaryCardTitle">Asumsi Produksi</h2>
-                        <p class="muted">Geser slider untuk menyesuaikan parameter. Rangkuman biaya & keuntungan di kartu atas akan ter-update otomatis.</p>
+                        <h2 id="secondaryCardTitle" style="display:flex;align-items:center;gap:6px">Asumsi Produksi
+                            <span class="tooltip-icon" aria-label="Info asumsi" tabindex="0">i
+                                <span class="tip">Sesuaikan slider untuk populasi, bobot, FCR dan parameter lain. Semua kartu rangkuman di atas otomatis memperbarui angka biaya, pendapatan, dan profit.</span>
+                            </span>
+                        </h2>
                     </div>
                 </div>
                 <div class="tabs">
@@ -316,9 +313,13 @@
                                                 </button>
                                             </div>
 
-                      <div id="advancedBanner" class="advanced-banner" style="display:none">
-                        Mode advance aktif. Parameter lanjutan tersedia di bawah untuk penyesuaian detail biaya.
-                      </div>
+                                            <div id="advancedBanner" class="advanced-banner" style="display:none">
+                                                <span style="display:flex;align-items:center;gap:6px">Mode advance aktif
+                                                        <span class="tooltip-icon" aria-label="Info mode advance" tabindex="0">i
+                                                                <span class="tip">Mode advance membuka parameter biaya detail (umur panen manual, dressing, tenaga kerja, overhead, wastage, shrinkage) serta memungkinkan rekomendasi AI untuk pemanas, listrik dan vaksin.</span>
+                                                        </span>
+                                                </span>
+                                            </div>
                       <div id="advancedControls" class="form-grid advanced-grid" style="display:none">
                         <div style="grid-column: 1 / -1;">
                             <button id="regenAdvice" class="btn-action ghost" style="width:100%;justify-content:center">
@@ -326,12 +327,15 @@
                             </button>
                         </div>
                         <div class="input-group">
-                            <label>Basis Harga Pasar</label>
+                            <label style="display:flex;align-items:center;gap:6px">Basis Harga Pasar
+                                <span class="tooltip-icon" aria-label="Info basis" tabindex="0">i
+                                    <span class="tip">Live Bird: harga per kg bobot hidup. Karkas: menggunakan dressing yield & biaya proses per ekor untuk konversi bobot hidup menjadi karkas.</span>
+                                </span>
+                            </label>
                             <div class="basis-switch" id="basisSwitch">
                                 <button type="button" class="basis-btn active" data-basis="live">Live Bird</button>
                                 <button type="button" class="basis-btn" data-basis="carcass">Karkas</button>
                             </div>
-                            <small>Live: harga per kg bobot hidup. Karkas: butuh dressing % & biaya proses.</small>
                         </div>
                         <div class="input-group advanced-only" data-basis="carcass" style="display:none">
                             <div class="slider-header"><label>Dressing Yield (%)</label><span class="slider-value" id="valDressing">72</span></div>
@@ -382,11 +386,14 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Biaya Pemanas & Listrik</label><span class="slider-value" id="valHeatingCost">Rp 0</span></div>
+                            <div class="slider-header"><label style="display:flex;align-items:center;gap:6px">Biaya Pemanas & Listrik
+                                <span class="tooltip-icon" aria-label="Info pemanas" tabindex="0">i
+                                    <span class="tip">Angka dasar dapat diisi manual atau berasal dari rekomendasi AI (estimasi bohlam, jam pemanas & perangkat tambahan).</span>
+                                </span>
+                            </label><span class="slider-value" id="valHeatingCost">Rp 0</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeHeatingCost" min="0" max="5000000" step="50000" value="0" />
                             </div>
-                            <small id="heatingHint">Angka awal mengikuti rekomendasi sistem.</small>
                         </div>
                         <div class="input-group">
                             <div class="slider-header"><label>Biaya Vaksin & Obat</label><span class="slider-value" id="valVaccineCost">Rp 100.000</span></div>
