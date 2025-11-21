@@ -219,6 +219,30 @@ body {
     border-color: rgba(63,143,95,0.7);
 }
 
+.chip-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 254, 0.5);
+    border: 1px solid rgba(137, 173, 146, 0.3);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.chip-link:hover {
+    background: rgba(63, 143, 95, 0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
 .history-tag {
     display: inline-flex;
     align-items: center;
@@ -1189,8 +1213,10 @@ input[type=range]::-moz-range-track {
 
 .chart-wrapper {
     position: relative;
-    width: 220px;
-    height: 220px;
+    width: 100%;
+    max-width: 220px;
+    aspect-ratio: 1;
+    margin: 0 auto;
 }
 
 .chart-center-label {
@@ -1297,10 +1323,5 @@ input[type=range]::-moz-range-track {
         grid-template-columns: 1fr;
         gap: 24px;
         padding: 20px;
-    }
-    
-    .chart-wrapper {
-        width: 180px;
-        height: 180px;
     }
 }
