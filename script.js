@@ -147,7 +147,8 @@ async function initGoogleAuth() {
                 {
                     theme: 'outline',
                     size: 'large',
-                    type: 'icon',
+                    shape: 'pill',
+                    text: 'sign',
                     logo_alignment: 'left'
                 }
             );
