@@ -26,6 +26,7 @@
     --info: #e0b24b;
     --warn: #d9772a;
     --danger: #c8513a;
+    --radius-xl: 48px;
     --radius-lg: 28px;
     --radius-md: 16px;
     --radius-sm: 12px;
@@ -34,7 +35,12 @@
     --shadow-hover: 0 30px 54px rgba(41, 71, 54, 0.32);
 }
 
-html { overflow-x: hidden; }
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+}
+
 body {
     font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
     background: linear-gradient(150deg, var(--bg-top) 0%, var(--bg-mid) 52%, var(--bg-bottom) 100%);
@@ -71,8 +77,6 @@ body {
 }
 .top-nav__left, .top-nav__right { min-width: 0; }
 .app-name { font-weight: 700; color: #000; letter-spacing: -0.02em; font-size: 1.1rem; }
-.top-nav__center { display: none; }
-.nav-link { display: none; }
 .btn-link { background: none; border: none; cursor: pointer; font: inherit; }
 
 .page-shell {
@@ -127,8 +131,8 @@ body {
 }
 
 .advanced-toggle-row {
-    margin: 24px 0 16px;
-    padding: 16px 24px;
+    margin: 24px 0 0;
+    padding: 20px;
     border: 1px solid rgba(137,173,146,0.35);
     border-radius: var(--radius-lg);
     background: rgba(255,255,254,0.88);
@@ -292,11 +296,6 @@ body:not(.auth-ready) .auth-area {
     display: block;
 }
 
-
-.user-info {
-    display: none;
-}
-
 .profile-trigger {
     cursor: pointer;
 }
@@ -361,7 +360,7 @@ body:not(.auth-ready) .auth-area {
 
 .dashboard {
     background: var(--surface);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     padding: 32px;
     border: 1px solid rgba(137,173,146,0.18);
     box-shadow: var(--shadow-sm);
@@ -942,7 +941,7 @@ input[type=range]::-moz-range-track {
 /* Footer */
 .site-footer {
     background: var(--surface);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     border: 1px solid rgba(137,173,146,0.18);
     padding: 28px 32px;
     box-shadow: var(--shadow-sm);
@@ -1053,8 +1052,7 @@ input[type=range]::-moz-range-track {
 }
 
 @media (max-width: 600px) {
-    .top-nav__inner { grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; }
-    .top-nav__center { display: none; }
+    .top-nav__inner { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 10px 12px; }
     .google-signin-container { width: auto; }
 
     .site-header,
@@ -1112,10 +1110,6 @@ input[type=range]::-moz-range-track {
 
     .dashboard {
         padding: 20px;
-    }
-
-    .hero-footnote {
-        font-size: 0.85rem;
     }
 
     .btn-action {

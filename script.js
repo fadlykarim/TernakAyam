@@ -208,9 +208,6 @@ function applyAuthState(session) {
     const userName = document.getElementById('user-name');
     const userAvatar = document.getElementById('user-avatar');
     // Buttons are now always visible, but gated by checkAuth()
-    // const saveBtn = document.getElementById('saveCalculation');
-    // const historyBtn = document.getElementById('viewHistory');
-    // const saveInfo = document.getElementById('saveInfo');
 
     if (session?.user) {
         const identity = deriveUserIdentity(session.user);
@@ -229,9 +226,6 @@ function applyAuthState(session) {
                 if (userBox) userBox.classList.remove('has-avatar');
             }
         }
-        // if (saveBtn) saveBtn.style.display = 'inline-block';
-        // if (historyBtn) historyBtn.style.display = 'inline-block';
-        // if (saveInfo) saveInfo.style.display = 'inline';
         localStorage.setItem('pp_user', JSON.stringify({
             id: session.user.id,
             email: session.user.email,
@@ -264,9 +258,6 @@ function applyAuthState(session) {
         }
         if (userBox) userBox.classList.remove('has-avatar');
         // Buttons remain visible
-        // if (saveBtn) saveBtn.style.display = 'none';
-        // if (historyBtn) historyBtn.style.display = 'none';
-        // if (saveInfo) saveInfo.style.display = 'none';
         localStorage.removeItem('pp_user');
         
         // Force disable advanced mode on logout
@@ -313,6 +304,8 @@ class ChickenCalc {
         this.profileLoading = false;
         this.activeTab = 'asumsi';
         this.aiGenCount = 0;
+        this.ui = {};
+        this.updatePending = false;
         this.init();
     }
 
@@ -376,10 +369,37 @@ class ChickenCalc {
     }
 
     init() {
+        this.cacheDOM();
         this.bind();
         this.initChart();
         this.applyAdvancedState();
         this.fetchPrice('kampung');
+    }
+
+    cacheDOM() {
+        const ids = [
+            'statJenis', 'statHarga', 'centerRevenue', 'detailProfit', 
+            'detailFeed', 'detailDOC', 'detailOther', 'detailTotalCost',
+            'statEkorPanen', 'statHarvestEstimate', 'statFCRDisplay',
+            'statCostPerKg', 'statBreakEven', 'statEpef',
+            'tabSimulasiContent', 'simCards', 'marketEditRow', 'inputMarketPrice',
+            'valPopulasi', 'valSurvival', 'valBobot', 'valHargaPakan', 'valFCR', 'valDocPrice'
+        ];
+        ids.forEach(id => {
+            this.ui[id] = document.getElementById(id);
+        });
+    }
+
+    scheduleUpdate() {
+        if (this.updatePending) return;
+        this.updatePending = true;
+        requestAnimationFrame(() => {
+            this.calc();
+            if (this.ui.tabSimulasiContent?.classList.contains('active')) {
+                this.renderSim();
+            }
+            this.updatePending = false;
+        });
     }
 
     loadAdvancedSettings() {
@@ -705,10 +725,7 @@ class ChickenCalc {
                 }
 
                 this.persistAdvancedSettings();
-                this.calc();
-                if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
-                    this.renderSim();
-                }
+                this.scheduleUpdate();
             });
         });
 
@@ -930,13 +947,9 @@ class ChickenCalc {
             el.addEventListener('input', e => {
                 const val = +e.target.value;
                 this.assumptions[sl.k] = sl.s ? val / sl.s : val;
-                const disp = document.getElementById(sl.d);
+                const disp = this.ui[sl.d] || document.getElementById(sl.d);
                 if (disp) disp.textContent = sl.f(sl.s ? val : val);
-                this.calc();
-                // Realtime update simulation when the Simulasi tab is visible
-                if (document.getElementById('tabSimulasiContent')?.classList.contains('active')) {
-                    this.renderSim();
-                }
+                this.scheduleUpdate();
             });
         });
     }
@@ -1149,7 +1162,6 @@ class ChickenCalc {
         this.setText('statHarvestEstimate', `${result.predictedHarvestAge} hari`);
         this.setText('statFCRDisplay', result.fcr.toFixed(2));
 
-        // this.updateBars(result.revenue ?? 0, result.totalCost, result.profit ?? 0);
         this.updateChart(result);
 
         if (result.advancedActive) {
@@ -1160,18 +1172,6 @@ class ChickenCalc {
                 epefEl.textContent = Number.isFinite(result.epef) ? result.epef.toFixed(1) : '–';
             }
         }
-    }
-
-    updateBars(rev, cost, profit) {
-        const bars = {
-            pendapatanProgress: 100,
-            biayaProgress: rev > 0 ? Math.min((cost / rev) * 100, 100) : 0,
-            keuntunganProgress: rev > 0 && profit > 0 ? Math.min((profit / rev) * 100, 100) : 0
-        };
-        Object.keys(bars).forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.width = bars[id] + '%';
-        });
     }
 
     initChart() {
@@ -2228,8 +2228,10 @@ class ChickenCalc {
     }
 
     setText(id, text) {
-        const el = document.getElementById(id);
-        if (el) el.textContent = text;
+        if (!this.ui[id]) {
+            this.ui[id] = document.getElementById(id);
+        }
+        if (this.ui[id]) this.ui[id].textContent = text;
     }
 
     fmt(num) {
@@ -2301,12 +2303,9 @@ window.addEventListener('scroll', () => tooltip.classList.remove('active'), {pas
 // ========================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🐔 Petok Predict Starting...');
-    
     try {
         // Load config first
         await loadConfig();
-        console.log('✅ Config loaded');
         
         // Initialize auth and calculator
         initGoogleAuth();
@@ -2325,8 +2324,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         });
-        
-        console.log('✅ Ready');
     } catch (error) {
         console.error('❌ Initialization failed:', error);
     }
