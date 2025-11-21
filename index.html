@@ -38,7 +38,9 @@
     <link rel="icon" href="pp.svg" type="image/svg+xml">
     
     <!-- External Libraries -->
-        <!-- jsPDF for export -->
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jsPDF for export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <!-- hCaptcha -->
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
@@ -179,60 +181,68 @@
                     </div>
                 </div>
 
-                <!-- Revenue Group -->
-                <div class="card-group">
-                    <div class="stat-card revenue">
-                        <p class="stat-title">Total Pendapatan</p>
-                        <p class="stat-value" id="statPendapatan">–</p>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" id="pendapatanProgress" style="width: 0%;"></div>
+                <!-- Financial Overview (Unified Chart) -->
+                <div class="financial-overview">
+                    <div class="financial-card">
+                        <div class="chart-section">
+                            <div class="chart-wrapper">
+                                <canvas id="financialChart"></canvas>
+                                <div class="chart-center-label">
+                                    <span class="label">Pendapatan</span>
+                                    <span class="value" id="centerRevenue">Rp 0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="details-section">
+                            <div class="detail-item profit">
+                                <div class="detail-head">
+                                    <span class="dot" style="background:#3F8F5F"></span>
+                                    <span class="label">Keuntungan Bersih</span>
+                                </div>
+                                <span class="value" id="detailProfit">Rp 0</span>
+                            </div>
+                            <div class="detail-item feed">
+                                <div class="detail-head">
+                                    <span class="dot" style="background:#E08A3D"></span>
+                                    <span class="label">Biaya Pakan</span>
+                                </div>
+                                <span class="value" id="detailFeed">Rp 0</span>
+                            </div>
+                            <div class="detail-item doc">
+                                <div class="detail-head">
+                                    <span class="dot" style="background:#D4A373"></span>
+                                    <span class="label">Biaya DOC</span>
+                                </div>
+                                <span class="value" id="detailDOC">Rp 0</span>
+                            </div>
+                            <div class="detail-item other">
+                                <div class="detail-head">
+                                    <span class="dot" style="background:#89AD92"></span>
+                                    <span class="label">Biaya Lainnya</span>
+                                </div>
+                                <span class="value" id="detailOther">Rp 0</span>
+                            </div>
+                            <div class="detail-divider"></div>
+                            <div class="detail-item total">
+                                <span class="label">Total Biaya</span>
+                                <span class="value" id="detailTotalCost">Rp 0</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card primary">
-                        <p class="stat-title">Keuntungan Bersih</p>
-                        <p class="stat-value" id="statKeuntungan">–</p>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" id="keuntunganProgress" style="width: 0%;"></div>
-                        </div>
-                    </div>
-                    <div class="stat-card info">
-                        <div class="stat-row">
-                            <p class="stat-title">Ekor Panen</p>
-                            <span class="info-icon" data-tooltip="Dihitung berdasarkan populasi awal dikurangi tingkat kematian (survival rate).">?</span>
-                        </div>
-                        <p class="stat-value" id="statEkorPanen">–</p>
-                    </div>
-                    <div class="stat-card info">
-                        <div class="stat-row">
-                            <p class="stat-title">Perkiraan Umur Panen</p>
-                            <span class="info-icon" data-tooltip="Estimasi biologis berdasarkan target bobot dan FCR.">?</span>
-                        </div>
-                        <p class="stat-value" id="statHarvestEstimate">–</p>
-                    </div>
-                </div>
 
-                <!-- Cost Breakdown Group -->
-                <div class="card-group">
-                    <div class="stat-card cost">
-                        <p class="stat-title">Biaya DOC</p>
-                        <p class="stat-value" id="statBiayaDoc">–</p>
-                    </div>
-                    <div class="stat-card cost">
-                        <p class="stat-title">Biaya Pakan/Ekor</p>
-                        <p class="stat-value" id="statBiayaPakanEkor">–</p>
-                    </div>
-                    <div class="stat-card cost">
-                        <div class="stat-row">
-                            <p class="stat-title">Biaya Tambahan</p>
-                            <span class="info-icon" data-tooltip="Meliputi biaya vaksin, vitamin, listrik/pemanas, tenaga kerja, overhead kandang, dan transportasi panen.">?</span>
+                    <!-- Key Metrics Row -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="label">Ekor Panen</span>
+                            <span class="value" id="statEkorPanen">–</span>
                         </div>
-                        <p class="stat-value" id="statBiayaTambahan">–</p>
-                    </div>
-                    <div class="stat-card cost">
-                        <p class="stat-title">Total Biaya</p>
-                        <p class="stat-value" id="statTotalBiaya">–</p>
-                        <div class="stat-progress">
-                            <div class="stat-progress-bar" id="biayaProgress" style="width: 0%;"></div>
+                        <div class="metric-card">
+                            <span class="label">Umur Panen</span>
+                            <span class="value" id="statHarvestEstimate">–</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label">FCR Aktual</span>
+                            <span class="value" id="statFCRDisplay">–</span>
                         </div>
                     </div>
                 </div>

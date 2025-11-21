@@ -377,6 +377,7 @@ class ChickenCalc {
 
     init() {
         this.bind();
+        this.initChart();
         this.applyAdvancedState();
         this.fetchPrice('kampung');
     }
@@ -1079,12 +1080,7 @@ class ChickenCalc {
         const profit = revenue != null ? revenue - totalCost : null;
         const margin = revenue && revenue > 0 ? profit / revenue : null;
         const productionKg = carcassKg && carcassKg > 0 ? carcassKg : null;
-
-        // Cost per Kg is always based on Gross Live Weight (Farm Gate)
-        const grossLiveKg = harvest * weight;
-        const costPerKg = grossLiveKg > 0 ? totalCost / grossLiveKg : null;
-
-        // Break Even is based on Sellable Weight (Production Kg)
+        const costPerKg = productionKg ? totalCost / productionKg : null;
         const breakEven = productionKg ? totalCost / productionKg : null;
         const epef = (survival * 100 * weight * 100) / (fcr * harvestAge);
 
@@ -1139,16 +1135,22 @@ class ChickenCalc {
 
         this.setText('statJenis', jenisDisplay);
         this.setText('statHarga', priceLabel);
-        this.setText('statBiayaDoc', this.fmt(result.docCost));
-        this.setText('statBiayaPakanEkor', this.fmt(result.feedCostPerBird));
-        this.setText('statBiayaTambahan', this.fmt(result.extraCost));
+
+        // New Dashboard Updates
+        this.updateChart(result);
+        this.setText('centerRevenue', result.revenue != null ? this.fmt(result.revenue) : 'Rp 0');
+        this.setText('detailProfit', result.profit != null ? this.fmt(result.profit) : 'Rp 0');
+        this.setText('detailFeed', this.fmt(result.totalFeedCost));
+        this.setText('detailDOC', this.fmt(result.docCost));
+        this.setText('detailOther', this.fmt(result.extraCost));
+        this.setText('detailTotalCost', this.fmt(result.totalCost));
+
         this.setText('statEkorPanen', `${result.harvest.toLocaleString('id-ID')} ekor`);
         this.setText('statHarvestEstimate', `${result.predictedHarvestAge} hari`);
-        this.setText('statTotalBiaya', this.fmt(result.totalCost));
-        this.setText('statPendapatan', result.revenue != null ? this.fmt(result.revenue) : 'Menunggu harga');
-        this.setText('statKeuntungan', result.profit != null ? this.fmt(result.profit) : 'Menunggu harga');
+        this.setText('statFCRDisplay', result.fcr.toFixed(2));
 
-        this.updateBars(result.revenue ?? 0, result.totalCost, result.profit ?? 0);
+        // this.updateBars(result.revenue ?? 0, result.totalCost, result.profit ?? 0);
+        this.updateChart(result);
 
         if (result.advancedActive) {
             this.setText('statCostPerKg', result.costPerKg ? this.fmt(result.costPerKg) : '–');
@@ -1170,6 +1172,69 @@ class ChickenCalc {
             const el = document.getElementById(id);
             if (el) el.style.width = bars[id] + '%';
         });
+    }
+
+    initChart() {
+        const ctx = document.getElementById('financialChart');
+        if (!ctx) return;
+
+        // Register Chart.js defaults if needed, though usually global defaults work
+        if (window.Chart) {
+            Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+            Chart.defaults.color = '#567A60';
+        }
+
+        this.chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Keuntungan', 'Pakan', 'DOC', 'Lainnya'],
+                datasets: [{
+                    data: [0, 0, 0, 0],
+                    backgroundColor: [
+                        '#3F8F5F', // Profit
+                        '#E08A3D', // Feed
+                        '#D4A373', // DOC
+                        '#89AD92'  // Other
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.parsed);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    updateChart(result) {
+        if (!this.chart) return;
+
+        const profit = Math.max(0, result.profit || 0);
+        const feed = result.totalFeedCost || 0;
+        const doc = result.docCost || 0;
+        const other = result.extraCost || 0;
+
+        this.chart.data.datasets[0].data = [profit, feed, doc, other];
+        this.chart.update();
     }
 
     tab(t) {
