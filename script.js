@@ -109,39 +109,61 @@ async function ensureProfileRow(user) {
 // GOOGLE AUTH
 // ========================================
 
-function renderCustomGoogleButton(containerEl) {
-    try {
-        const sb = getSb();
-        containerEl.innerHTML = '';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'btn-google';
-        btn.textContent = 'Google';
-        btn.addEventListener('click', async () => {
-            try {
-                const { error } = await sb.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.origin,
-                        skipBrowserRedirect: false
-                    }
-                });
-                if (error) throw error;
-            } catch (e) {
-                alert('Login gagal: ' + (e?.message || 'Tidak diketahui'));
-            }
-        });
-        containerEl.appendChild(btn);
-    } catch (e) {
-        console.error('Render custom Google button failed', e);
-    }
-}
-
 async function initGoogleAuth() {
     await loadConfig();
+    
+    if (!CONFIG || CONFIG.googleClientId.includes('YOUR_')) return;
+
     const loginContainer = document.getElementById('login-btn');
     if (!loginContainer) return;
-    renderCustomGoogleButton(loginContainer);
+
+    const setup = () => {
+        if (googleAuthReady || !window.google?.accounts?.id) return;
+        googleAuthReady = true;
+
+        google.accounts.id.initialize({
+            client_id: CONFIG.googleClientId,
+            callback: async (response) => {
+                try {
+                    const sb = getSb();
+                    const { error } = await sb.auth.signInWithIdToken({
+                        provider: 'google',
+                        token: response.credential
+                    });
+                    if (error) throw error;
+                    await updateAuthUI();
+                } catch (e) {
+                    alert('Login gagal: ' + e.message);
+                }
+            },
+            ux_mode: 'popup',
+            cancel_on_tap_outside: false
+        });
+
+        // Render Google button only once
+        if (!googleButtonRendered) {
+            google.accounts.id.renderButton(
+                loginContainer,
+                {
+                    theme: 'outline',
+                    size: 'large',
+                    type: 'icon',
+                    logo_alignment: 'left'
+                }
+            );
+            googleButtonRendered = true;
+        }
+    };
+
+    if (window.google?.accounts?.id) {
+        setup();
+        return;
+    }
+
+    const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (gisScript) {
+        gisScript.addEventListener('load', setup, { once: true });
+    }
 }
 
 async function logout() {
@@ -214,8 +236,22 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
-            // Render our custom OAuth button
-            renderCustomGoogleButton(loginContainer);
+            // Re-render button on logout to ensure responsiveness on mobile
+            if (googleAuthReady && window.google?.accounts?.id) {
+                try {
+                    loginContainer.innerHTML = '';
+                    google.accounts.id.renderButton(
+                        loginContainer,
+                        {
+                            theme: 'outline',
+                            size: 'large',
+                            type: 'icon',
+                            logo_alignment: 'left'
+                        }
+                    );
+                    googleButtonRendered = true;
+                } catch (_) {}
+            }
         }
         if (userBox) userBox.style.display = 'none';
         if (userAvatar) {
@@ -289,8 +325,18 @@ class ChickenCalc {
         this.modal('Login Diperlukan', html);
         
         setTimeout(() => {
-            const el = document.getElementById('modal-login-btn');
-            if (el) renderCustomGoogleButton(el);
+            if (window.google?.accounts?.id) {
+                google.accounts.id.renderButton(
+                    document.getElementById('modal-login-btn'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin_with',
+                        shape: 'pill',
+                        logo_alignment: 'left'
+                    }
+                );
+            }
         }, 100);
     }
 
