@@ -15,6 +15,21 @@ let googleButtonRendered = false;
 let captchaWidgetId = null;
 const ensuredProfiles = new Set();
 
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+}
+
 // Load config from Netlify Function
 async function loadConfig() {
     if (configLoaded) return CONFIG;
@@ -23,11 +38,7 @@ async function loadConfig() {
         const response = await fetch('/api/config');
         if (!response.ok) throw new Error('Failed to load config');
         CONFIG = await response.json();
-        
-        // Initialize Supabase client with loaded config
-        supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
         configLoaded = true;
-        
         return CONFIG;
     } catch (error) {
         console.error('Config load failed:', error);
@@ -36,12 +47,27 @@ async function loadConfig() {
     }
 }
 
-// Getter for Supabase client
-function getSb() {
+let supabaseLoadingPromise = null;
+async function ensureSupabase() {
+    if (supabaseClient) return supabaseClient;
+    if (!CONFIG) await loadConfig();
+    
+    if (!window.supabase) {
+        if (!supabaseLoadingPromise) {
+            supabaseLoadingPromise = loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
+        }
+        await supabaseLoadingPromise;
+    }
+    
     if (!supabaseClient) {
-        throw new Error('Supabase client not initialized. Call loadConfig() first.');
+        supabaseClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
     }
     return supabaseClient;
+}
+
+// Getter for Supabase client
+async function getSb() {
+    return ensureSupabase();
 }
 
 function deriveUserIdentity(user) {
@@ -83,7 +109,7 @@ async function ensureProfileRow(user) {
         return;
     }
 
-    const sb = getSb();
+    const sb = await getSb();
     const identity = deriveUserIdentity(user);
 
     try {
@@ -117,6 +143,15 @@ async function initGoogleAuth() {
     const loginContainer = document.getElementById('login-btn');
     if (!loginContainer) return;
 
+    if (!window.google?.accounts?.id) {
+        try {
+            await loadScript('https://accounts.google.com/gsi/client');
+        } catch (e) {
+            console.error('Failed to load Google Sign-In', e);
+            return;
+        }
+    }
+
     const setup = () => {
         if (googleAuthReady || !window.google?.accounts?.id) return;
         googleAuthReady = true;
@@ -125,7 +160,7 @@ async function initGoogleAuth() {
             client_id: CONFIG.googleClientId,
             callback: async (response) => {
                 try {
-                    const sb = getSb();
+                    const sb = await getSb();
                     const { error } = await sb.auth.signInWithIdToken({
                         provider: 'google',
                         token: response.credential
@@ -160,15 +195,7 @@ async function initGoogleAuth() {
         }
     };
 
-    if (window.google?.accounts?.id) {
-        setup();
-        return;
-    }
-
-    const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-    if (gisScript) {
-        gisScript.addEventListener('load', setup, { once: true });
-    }
+    setup();
 }
 
 async function logout() {
@@ -182,7 +209,7 @@ async function logout() {
 
     try {
         applyAuthState(null);
-        const sb = getSb();
+        const sb = await getSb();
         const { error } = await sb.auth.signOut();
         if (error) throw error;
 
@@ -277,7 +304,7 @@ function applyAuthState(session) {
         }
         return;
     }
-    const sb = getSb();
+    const sb = await getSb();
     const { data: { session } } = await sb.auth.getSession();
     applyAuthState(session);
     if (session?.user) {
@@ -343,7 +370,16 @@ class ChickenCalc {
     }
 
     promptCaptchaAsync(title = 'Verifikasi Keamanan') {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
+            if (!window.hcaptcha) {
+                try {
+                    await loadScript('https://js.hcaptcha.com/1/api.js');
+                } catch (e) {
+                    console.error('Failed to load hCaptcha', e);
+                    // Fallback or error handling? For now just proceed, render will fail gracefully
+                }
+            }
+
             const html = `
                 <div id="captchaStep" style="text-align:center">
                     <p style="color:#567a60;margin-bottom:16px">Mohon verifikasi bahwa Anda bukan robot:</p>
@@ -1179,9 +1215,20 @@ class ChickenCalc {
         }
     }
 
-    initChart() {
+    async initChart() {
+        if (this.chart) return;
+        
         const ctx = document.getElementById('financialChart');
         if (!ctx) return;
+
+        if (!window.Chart) {
+            try {
+                await loadScript('https://cdn.jsdelivr.net/npm/chart.js');
+            } catch (e) {
+                console.error('Failed to load Chart.js', e);
+                return;
+            }
+        }
 
         // Register Chart.js defaults if needed, though usually global defaults work
         if (window.Chart) {
@@ -1229,7 +1276,13 @@ class ChickenCalc {
         });
     }
 
-    updateChart(result) {
+    async updateChart(result) {
+        if (!this.chart) {
+            if (!this.chartLoadingPromise) {
+                this.chartLoadingPromise = this.initChart();
+            }
+            await this.chartLoadingPromise;
+        }
         if (!this.chart) return;
 
         const profit = Math.max(0, result.profit || 0);
@@ -1451,7 +1504,7 @@ class ChickenCalc {
                 if (!data.marketPrice || data.marketPrice <= 0) {
                     throw new Error('Harga pasar belum tersedia. Coba lagi setelah harga ter-update.');
                 }
-                const sb = getSb();
+                const sb = await getSb();
                 const { data: { user } } = await sb.auth.getUser();
                 await ensureProfileRow(user);
                 const { error } = await sb.rpc('save_calculation', {
@@ -1559,7 +1612,7 @@ class ChickenCalc {
         this.modal('History', loadingHtml);
 
         try {
-            const sb = getSb();
+            const sb = await getSb();
             const { data: history, error } = await sb.rpc('get_recent_calculations', {
                 limit_count: 20,
                 offset_count: 0
@@ -1631,7 +1684,7 @@ class ChickenCalc {
             btn.addEventListener('click', async (e) => {
                 const target = e.currentTarget;
                 const id = target.dataset.id;
-                const sb = getSb();
+                const sb = await getSb();
                 const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
                     calculation_id: id
                 });
@@ -1648,7 +1701,7 @@ class ChickenCalc {
         document.querySelectorAll('.btn-load').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.target.dataset.id;
-                const sb = getSb();
+                const sb = await getSb();
                 const { data: calc, error } = await sb
                     .from('calculation_history')
                     .select('*')
@@ -1670,7 +1723,7 @@ class ChickenCalc {
             btn.addEventListener('click', async (e) => {
                 if (!confirm('Hapus?')) return;
                 const id = e.target.dataset.id;
-                const sb = getSb();
+                const sb = await getSb();
                 const { error } = await sb.rpc('delete_calculation', {
                     calculation_id: id
                 });
@@ -1747,7 +1800,7 @@ class ChickenCalc {
         this.modal('Profile', loadingHtml);
 
         try {
-            const sb = getSb();
+            const sb = await getSb();
             const { data: { user } } = await sb.auth.getUser();
             if (!user) throw new Error('Not authenticated');
 
@@ -1826,7 +1879,7 @@ class ChickenCalc {
             document.getElementById('profileForm')?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 try {
-                    const sb = getSb();
+                    const sb = await getSb();
                     const advancedConfigPayload = {
                         basis: this.advanced.basis,
                         dressing: this.advanced.dressing,
@@ -2335,7 +2388,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         await updateAuthUI();
         
         // Setup auth state listener
-        const sb = getSb();
+        const sb = await getSb();
         sb.auth.onAuthStateChange(async (_, session) => {
             await updateAuthUI(session);
             if (session?.user) {
