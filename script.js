@@ -1314,14 +1314,19 @@ class ChickenCalc {
     showCaptchaModal() {
         const html = `
             <div id="captchaStep" style="text-align:center">
-                <p style="color:var(--text-muted);margin-bottom:16px">Verifikasi dulu ya:</p>
+                <p class="helper-text" style="margin-bottom:16px">Verifikasi dulu ya:</p>
                 <div id="hcaptcha-container"></div>
             </div>
             <div id="notesStep" style="display:none">
-                <p style="color:var(--text-muted);margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Verifikasi berhasil!</p>
-                <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-strong)">Catatan (opsional):</label>
-                <textarea id="notesInput" class="advanced-notes" placeholder="Tambahkan catatan untuk perhitungan ini..." style="min-height:80px"></textarea>
-                <div style="display:flex;gap:12px;margin-top:16px;justify-content:flex-end">
+                <p class="helper-success" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:6px">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> 
+                    Verifikasi berhasil!
+                </p>
+                <div class="input-group">
+                    <label>Catatan (opsional):</label>
+                    <textarea id="notesInput" class="advanced-notes" placeholder="Tambahkan catatan untuk perhitungan ini..."></textarea>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:20px;justify-content:flex-end">
                     <button id="cancelSave" class="btn-action ghost">Batal</button>
                     <button id="confirmSave" class="btn-action accent">Simpan</button>
                 </div>
@@ -1490,13 +1495,13 @@ class ChickenCalc {
                 return;
             }
 
-            let html = '<div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">';
+            let html = '<div style="max-height:400px;overflow-y:auto">';
             history.forEach(c => {
                 const date = new Date(c.calculation_date).toLocaleDateString('id-ID');
                 const iconUp = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
                 const iconDown = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
                 const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
-                const col = c.keuntungan_bersih > 0 ? 'var(--accent)' : 'var(--danger)';
+                const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 
                 const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
                 const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
@@ -1506,20 +1511,22 @@ class ChickenCalc {
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
                 html += `
-                    <div class="stat-card" style="padding:16px;flex-direction:row;justify-content:space-between;align-items:flex-start">
-                        <div style="flex:1">
-                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-                                <span>${c.chicken_type} - ${c.populasi} ekor</span>
-                                ${modeBadge}
-                                <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--info);padding:0">${star}</button>
+                    <div style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                            <div style="flex:1">
+                                <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                                    <span>${c.chicken_type} - ${c.populasi} ekor</span>
+                                    ${modeBadge}
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#e0b24b">${star}</button>
+                                </div>
+                                <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
+                                <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
+                                ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem;margin-top:4px">"${c.notes}"</div>` : ''}
                             </div>
-                            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px">${date}${basisInfo}</div>
-                            <div style="font-weight:700;color:${col};display:flex;align-items:center;gap:6px;font-size:1.1rem">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
-                            ${c.notes ? `<div style="font-style:italic;color:var(--text-soft);font-size:0.85rem;margin-top:4px">"${c.notes}"</div>` : ''}
-                        </div>
-                        <div style="display:flex;flex-direction:column;gap:8px">
-                            <button class="btn-load btn-action accent" data-id="${c.id}" style="padding:6px 12px;font-size:0.85rem">Muat</button>
-                            <button class="btn-del btn-action ghost" data-id="${c.id}" style="padding:6px 12px;font-size:0.85rem;color:var(--danger);border-color:rgba(200,81,58,0.3)">Hapus</button>
+                            <div style="display:flex;flex-direction:column;gap:8px;margin-left:12px">
+                                <button class="btn-action accent" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem">Muat</button>
+                                <button class="btn-action ghost" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem;color:#C8513A;background:rgba(200,81,58,0.1)">Hapus</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -1708,18 +1715,26 @@ class ChickenCalc {
             this.applyAdvancedState();
             
             const html = `
-                <form id="profileForm" style="display:grid;gap:24px;color:var(--text-strong)">
+                <form id="profileForm" style="display:flex;flex-direction:column;gap:24px;color:#24412F">
                     <div class="input-group">
                         <h4 style="margin-bottom:8px">Info Personal</h4>
-                        <input type="text" id="fullName" value="${escapeAttr(displayName)}" placeholder="Nama" style="margin-bottom:8px">
-                        <input type="email" value="${escapeAttr(p.email || user.email)}" disabled style="margin-bottom:8px;background:rgba(255,255,254,0.75);color:var(--text-muted)">
-                        <input type="tel" id="phone" value="${escapeAttr(displayPhone)}" placeholder="Telp">
+                        <div class="input-group">
+                            <input type="text" id="fullName" value="${escapeAttr(displayName)}" placeholder="Nama Lengkap">
+                        </div>
+                        <div class="input-group">
+                            <input type="email" value="${escapeAttr(p.email || user.email)}" disabled style="background:rgba(255,255,254,0.75);color:#567a60">
+                        </div>
+                        <div class="input-group">
+                            <input type="tel" id="phone" value="${escapeAttr(displayPhone)}" placeholder="Nomor Telepon">
+                        </div>
                     </div>
                     <div class="input-group">
                         <h4 style="margin-bottom:8px">Peternakan</h4>
-                        <input type="text" id="farmName" value="${escapeAttr(displayFarmName)}" placeholder="Nama Peternakan">
+                        <div class="input-group">
+                            <input type="text" id="farmName" value="${escapeAttr(displayFarmName)}" placeholder="Nama Peternakan">
+                        </div>
                     </div>
-                    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+                    <div style="display:flex;gap:12px;justify-content:flex-end">
                         <button type="button" id="cancelBtn" class="btn-action ghost">Batal</button>
                         <button type="submit" class="btn-action accent">Simpan</button>
                     </div>
@@ -2049,9 +2064,9 @@ class ChickenCalc {
 
         const html = `
             <div class="advanced-config">
-                <p style="color:var(--text-muted);margin-bottom:12px">Masukkan detail spesifikasi kandang Anda agar rekomendasi biaya lebih akurat.</p>
+                <p class="helper-text" style="margin-bottom:16px">Masukkan detail spesifikasi kandang Anda agar rekomendasi biaya lebih akurat.</p>
                 
-                <div id="customFields" style="margin-top:16px;display:grid;gap:12px">
+                <div id="customFields" class="form-grid">
                     <div class="input-group">
                         <label>Panjang kandang (m)</label>
                         <input type="number" id="customLength" min="1" step="0.5" value="${custom.length ?? ''}" placeholder="Misal 12">
@@ -2072,25 +2087,27 @@ class ChickenCalc {
                             <option value="mixed" ${custom.ventilation==='mixed'?'selected':''}>Campuran</option>
                         </select>
                     </div>
-                    <fieldset style="border:1px solid var(--border);padding:12px;border-radius:10px;display:grid;gap:8px">
-                        <legend style="padding:0 6px;color:var(--primary);font-weight:600">Fitur tambahan</legend>
-                        ${[{
-                            key: 'autoBrooder', label: 'Ada pemanas otomatis atau gas brooder'
-                        }, {
-                            key: 'curtain', label: 'Menggunakan tirai/kasa untuk kontrol suhu'
-                        }, {
-                            key: 'fogger', label: 'Ada fogger atau sprayer pendingin'
-                        }, {
-                            key: 'lighting', label: 'Menggunakan lampu LED hemat energi'
-                        }].map(item => `
-                            <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
-                                <input type="checkbox" data-extra="${item.key}" ${extras.includes(item.key)?'checked':''}>
-                                <span>${item.label}</span>
-                            </label>
-                        `).join('')}
-                    </fieldset>
                 </div>
-                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
+
+                <fieldset style="border:1px solid rgba(137,173,146,0.45);padding:16px;border-radius:10px;display:grid;gap:10px;margin-top:8px">
+                    <legend style="padding:0 8px;color:#3F8F5F;font-weight:600">Fitur tambahan</legend>
+                    ${[{
+                        key: 'autoBrooder', label: 'Ada pemanas otomatis atau gas brooder'
+                    }, {
+                        key: 'curtain', label: 'Menggunakan tirai/kasa untuk kontrol suhu'
+                    }, {
+                        key: 'fogger', label: 'Ada fogger atau sprayer pendingin'
+                    }, {
+                        key: 'lighting', label: 'Menggunakan lampu LED hemat energi'
+                    }].map(item => `
+                        <label style="display:flex;gap:10px;align-items:center;cursor:pointer">
+                            <input type="checkbox" data-extra="${item.key}" ${extras.includes(item.key)?'checked':''}>
+                            <span>${item.label}</span>
+                        </label>
+                    `).join('')}
+                </fieldset>
+
+                <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:24px">
                     <button type="button" id="cancelAdvConfig" class="btn-action ghost">Batal</button>
                     <button type="button" id="saveAdvConfig" class="btn-action accent">Simpan & Update</button>
                 </div>
