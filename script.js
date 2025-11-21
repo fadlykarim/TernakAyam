@@ -14,20 +14,31 @@ let googleAuthReady = false;
 let googleButtonRendered = false;
 let captchaWidgetId = null;
 const ensuredProfiles = new Set();
+const scriptLoadingPromises = {};
 
 function loadScript(src) {
-    return new Promise((resolve, reject) => {
-        if (document.querySelector(`script[src="${src}"]`)) {
-            resolve();
-            return;
-        }
+    if (scriptLoadingPromises[src]) {
+        return scriptLoadingPromises[src];
+    }
+
+    if (document.querySelector(`script[src="${src}"]`)) {
+        return Promise.resolve();
+    }
+
+    const promise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src;
         script.async = true;
         script.onload = resolve;
-        script.onerror = reject;
+        script.onerror = (e) => {
+            delete scriptLoadingPromises[src];
+            reject(e);
+        };
         document.head.appendChild(script);
     });
+
+    scriptLoadingPromises[src] = promise;
+    return promise;
 }
 
 // Load config from Netlify Function
@@ -57,6 +68,14 @@ async function ensureSupabase() {
             supabaseLoadingPromise = loadScript('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
         }
         await supabaseLoadingPromise;
+
+        // Wait for supabase global
+        let attempts = 0;
+        while (!window.supabase && attempts < 50) {
+            await new Promise(r => setTimeout(r, 50));
+            attempts++;
+        }
+        if (!window.supabase) throw new Error('Supabase SDK failed to load');
     }
     
     if (!supabaseClient) {
@@ -150,6 +169,18 @@ async function initGoogleAuth() {
             console.error('Failed to load Google Sign-In', e);
             return;
         }
+    }
+
+    // Wait for Google GSI to be ready
+    let attempts = 0;
+    while (!window.google?.accounts?.id && attempts < 50) {
+        await new Promise(r => setTimeout(r, 100));
+        attempts++;
+    }
+
+    if (!window.google?.accounts?.id) {
+        console.error('Google Sign-In failed to initialize');
+        return;
     }
 
     const setup = () => {
@@ -369,15 +400,30 @@ class ChickenCalc {
         }, 100);
     }
 
-    promptCaptchaAsync(title = 'Verifikasi Keamanan') {
+    async promptCaptchaAsync(title = 'Verifikasi Keamanan') {
+        await loadConfig();
+
         return new Promise(async (resolve) => {
             if (!window.hcaptcha) {
                 try {
-                    await loadScript('https://js.hcaptcha.com/1/api.js');
+                    await loadScript('https://js.hcaptcha.com/1/api.js?render=explicit');
                 } catch (e) {
                     console.error('Failed to load hCaptcha', e);
-                    // Fallback or error handling? For now just proceed, render will fail gracefully
+                    this.notify('Gagal memuat sistem keamanan', 'error');
+                    return;
                 }
+            }
+
+            // Wait for hcaptcha to be ready
+            let attempts = 0;
+            while (!window.hcaptcha && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+
+            if (!window.hcaptcha) {
+                this.notify('Sistem keamanan tidak siap', 'error');
+                return;
             }
 
             const html = `
@@ -393,14 +439,15 @@ class ChickenCalc {
                 resolve(token);
             };
 
-            setTimeout(() => {
-                if (window.hcaptcha) {
-                    window.hcaptcha.render('hcaptcha-container-generic', {
-                        sitekey: CONFIG?.captchaKey || '',
-                        callback: 'onGenericCaptchaSuccess'
-                    });
-                }
-            }, 100);
+            try {
+                window.hcaptcha.render('hcaptcha-container-generic', {
+                    sitekey: CONFIG?.captchaKey || '',
+                    callback: 'onGenericCaptchaSuccess'
+                });
+            } catch (e) {
+                console.error('hCaptcha render error:', e);
+                this.notify('Gagal menampilkan captcha', 'error');
+            }
         });
     }
 
@@ -1440,10 +1487,34 @@ class ChickenCalc {
         if (!this.checkAuth()) return;
 
         // Show captcha modal
-        this.showCaptchaModal();
+        await this.showCaptchaModal();
     }
 
-    showCaptchaModal() {
+    async showCaptchaModal() {
+        await loadConfig();
+
+        if (!window.hcaptcha) {
+            try {
+                await loadScript('https://js.hcaptcha.com/1/api.js?render=explicit');
+            } catch (e) {
+                console.error('Failed to load hCaptcha', e);
+                this.notify('Gagal memuat sistem keamanan', 'error');
+                return;
+            }
+        }
+
+        // Wait for hcaptcha
+        let attempts = 0;
+        while (!window.hcaptcha && attempts < 50) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+        }
+
+        if (!window.hcaptcha) {
+            this.notify('Sistem keamanan tidak siap', 'error');
+            return;
+        }
+
         const html = `
             <div id="captchaStep" style="text-align:center">
                 <p class="helper-text" style="margin-bottom:16px">Verifikasi dulu ya:</p>
@@ -1467,17 +1538,18 @@ class ChickenCalc {
         this.modal('Simpan Perhitungan', html);
         
         // Render captcha after modal is in DOM
-        setTimeout(() => {
-            if (window.hcaptcha) {
-                const container = document.getElementById('hcaptcha-container');
-                if (container) {
-                    captchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
-                        sitekey: CONFIG?.captchaKey || '',
-                        callback: 'onCaptchaSuccess'
-                    });
-                }
+        try {
+            const container = document.getElementById('hcaptcha-container');
+            if (container) {
+                captchaWidgetId = window.hcaptcha.render('hcaptcha-container', {
+                    sitekey: CONFIG?.captchaKey || '',
+                    callback: 'onCaptchaSuccess'
+                });
             }
-        }, 100);
+        } catch (e) {
+            console.error('hCaptcha render error:', e);
+            this.notify('Gagal menampilkan captcha', 'error');
+        }
     }
 
     async saveWithCaptcha(token) {
