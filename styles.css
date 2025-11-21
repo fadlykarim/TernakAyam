@@ -257,6 +257,26 @@ body:not(.auth-ready) .auth-area {
     -webkit-tap-highlight-color: transparent;
 }
 
+.btn-google {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    min-height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,254,0.95);
+    color: var(--text-strong);
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.btn-google:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
 .simple-icon {
     width: 18px;
     height: 18px;
