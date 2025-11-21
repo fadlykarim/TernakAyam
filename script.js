@@ -836,6 +836,10 @@ class ChickenCalc {
             }
             this.generateAdvancedAdvice();
         });
+
+        document.getElementById('editCoop')?.addEventListener('click', () => {
+            this.showProfile();
+        });
     }
 
     async generateAdvancedAdvice() {
