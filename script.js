@@ -1710,19 +1710,18 @@ class ChickenCalc {
                 const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heart = c.is_favorite ? heartFilled : heartOutline;
-                const favColor = c.is_favorite ? '#E91E63' : '#567a60';
                 
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
                 html += `
-                    <div style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
+                    <div class="history-item" style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start">
                             <div style="flex:1">
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:${favColor}">${heart}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#ed4956;padding:4px">${heart}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
                                 <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
@@ -1755,20 +1754,16 @@ class ChickenCalc {
     bindHistoryBtns() {
         document.querySelectorAll('.btn-fav').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
                 const target = e.currentTarget;
                 const id = target.dataset.id;
                 
                 // Optimistic UI update
-                const currentHtml = target.innerHTML;
-                const isFilled = currentHtml.includes('fill="currentColor"');
-                
+                const isFilled = target.innerHTML.includes('fill="currentColor"');
                 const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 
-                // Toggle state
-                const newIsFilled = !isFilled;
-                target.innerHTML = newIsFilled ? heartFilled : heartOutline;
-                target.style.color = newIsFilled ? '#E91E63' : '#567a60';
+                target.innerHTML = isFilled ? heartOutline : heartFilled;
 
                 try {
                     const sb = await getSb();
@@ -1777,22 +1772,20 @@ class ChickenCalc {
                     });
                     if (error) throw error;
                     
-                    // Ensure final state matches server
+                    // Ensure UI matches server state
                     target.innerHTML = newStatus ? heartFilled : heartOutline;
-                    target.style.color = newStatus ? '#E91E63' : '#567a60';
                 } catch (error) {
                     console.error('Toggle favorite error:', error);
                     // Revert on error
-                    target.innerHTML = currentHtml;
-                    target.style.color = isFilled ? '#E91E63' : '#567a60';
-                    this.notify('Gagal update favorite', 'error');
+                    target.innerHTML = isFilled ? heartFilled : heartOutline;
+                    this.notify('Gagal mengubah favorit', 'error');
                 }
             });
         });
 
         document.querySelectorAll('.btn-load').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
+                const id = e.currentTarget.dataset.id;
                 const sb = await getSb();
                 const { data: calc, error } = await sb
                     .from('calculation_history')
@@ -1814,7 +1807,8 @@ class ChickenCalc {
         document.querySelectorAll('.btn-del').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if (!confirm('Hapus?')) return;
-                const id = e.target.dataset.id;
+                const target = e.currentTarget;
+                const id = target.dataset.id;
                 const sb = await getSb();
                 const { error } = await sb.rpc('delete_calculation', {
                     calculation_id: id
@@ -1824,7 +1818,7 @@ class ChickenCalc {
                     this.notify('Error', 'error');
                     return;
                 }
-                e.target.closest('div[style*="border:1px"]').remove();
+                target.closest('.history-item').remove();
                 this.notify('Deleted', 'success');
             });
         });
