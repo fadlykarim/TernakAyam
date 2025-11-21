@@ -147,7 +147,8 @@ async function initGoogleAuth() {
                     theme: 'outline',
                     size: 'large',
                     text: 'signin',
-                    logo_alignment: 'left'
+                    logo_alignment: 'left',
+                    shape: 'pill'
                 }
             );
             googleButtonRendered = true;
@@ -244,7 +245,8 @@ function applyAuthState(session) {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin',
-                        logo_alignment: 'left'
+                        logo_alignment: 'left',
+                        shape: 'pill'
                     }
                 );
                 googleButtonRendered = true;
@@ -329,7 +331,7 @@ class ChickenCalc {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin_with',
-                        shape: 'rectangular',
+                        shape: 'pill',
                         logo_alignment: 'left'
                     }
                 );
