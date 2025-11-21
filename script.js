@@ -371,7 +371,12 @@ class ChickenCalc {
     init() {
         this.cacheDOM();
         this.bind();
-        this.initChart();
+        // Defer chart initialization to unblock main thread
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.initChart());
+        } else {
+            setTimeout(() => this.initChart(), 100);
+        }
         this.applyAdvancedState();
         this.fetchPrice('kampung');
     }
@@ -1867,10 +1872,27 @@ class ChickenCalc {
         }
     }
 
-    exportPDF() {
+    async exportPDF() {
         if (!this.checkAuth()) return;
 
-        const jsPDF = window.jsPDF || window.jspdf?.jsPDF;
+        // Dynamic load jsPDF
+        if (!window.jspdf) {
+            this.notify('Memuat library PDF...', 'info');
+            try {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+            } catch (e) {
+                this.notify('Gagal memuat library PDF', 'error');
+                return;
+            }
+        }
+
+        const jsPDF = window.jspdf.jsPDF;
         if (!jsPDF) {
             this.notify('PDF lib not loaded', 'error');
             return;

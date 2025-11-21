@@ -1,0 +1,16 @@
+{
+  "name": "Petok Predict",
+  "short_name": "PetokPredict",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f8ec",
+  "theme_color": "#f3f8ec",
+  "description": "Kalkulator Perhitungan Ayam Profesional",
+  "icons": [
+    {
+      "src": "pp.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -34,14 +34,14 @@
     <link rel="preconnect" href="https://js.hcaptcha.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta name="theme-color" content="#f3f8ec">
+    <link rel="manifest" href="manifest.json">
     <!-- Dynamic SVG Favicon -->
     <link rel="icon" href="pp.svg" type="image/svg+xml">
     
     <!-- External Libraries -->
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-    <!-- jsPDF for export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <!-- hCaptcha -->
     <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
@@ -294,38 +294,38 @@
                     <div class="tab-content active" id="tabAsumsiContent">
                       <div class="form-grid">
                     <div class="input-group">
-                        <div class="slider-header"><label>Populasi</label><span class="slider-value" id="valPopulasi">100</span></div>
+                        <div class="slider-header"><label for="rangePopulasi">Populasi</label><span class="slider-value" id="valPopulasi">100</span></div>
                         <div class="slider-wrap">
                             <input type="range" id="rangePopulasi" min="50" max="1000" step="10" value="100" />
                         </div>
                     </div>
                     <div class="input-group">
-                        <div class="slider-header"><label>Survival (%)</label><span class="slider-value" id="valSurvival">95</span></div>
+                        <div class="slider-header"><label for="rangeSurvival">Survival (%)</label><span class="slider-value" id="valSurvival">95</span></div>
                         <div class="slider-wrap">
                             <input type="range" id="rangeSurvival" min="70" max="100" step="1" value="95" />
                         </div>
                     </div>
                     <div class="input-group">
-                        <div class="slider-header"><label>Bobot Panen (kg)</label><span class="slider-value" id="valBobot">1.00</span></div>
+                        <div class="slider-header"><label for="rangeBobot">Bobot Panen (kg)</label><span class="slider-value" id="valBobot">1.00</span></div>
                         <div class="slider-wrap">
                             <input type="range" id="rangeBobot" min="0.8" max="1.4" step="0.02" value="1.00" />
                         </div>
                     </div>
                     <div class="input-group">
-                        <div class="slider-header"><label>Harga Pakan/sak 50kg</label><span class="slider-value" id="valHargaPakan">Rp 400.000</span></div>
+                        <div class="slider-header"><label for="rangeHargaPakan">Harga Pakan/sak 50kg</label><span class="slider-value" id="valHargaPakan">Rp 400.000</span></div>
                         <div class="slider-wrap">
                             <input type="range" id="rangeHargaPakan" min="300000" max="650000" step="5000" value="400000" />
                         </div>
                     </div>
                     <div class="input-group">
-                        <div class="slider-header"><label>FCR</label><span class="slider-value" id="valFCR">2.30</span></div>
+                        <div class="slider-header"><label for="rangeFCR">FCR</label><span class="slider-value" id="valFCR">2.30</span></div>
                         <div class="slider-wrap">
                             <input type="range" id="rangeFCR" min="1.6" max="3.0" step="0.05" value="2.30" />
                         </div>
                     </div>
                     <div class="input-group">
                         <div class="slider-header">
-                            <label>DOC/Ekor (Rp) <span class="info-icon" data-tooltip="Harga beli bibit anak ayam (Day Old Chicken) per ekor.">?</span></label>
+                            <label for="rangeDocPrice">DOC/Ekor (Rp) <span class="info-icon" data-tooltip="Harga beli bibit anak ayam (Day Old Chicken) per ekor.">?</span></label>
                             <span class="slider-value" id="valDocPrice">Rp 8.000</span>
                         </div>
                         <div class="slider-wrap">
@@ -366,62 +366,62 @@
                             </div>
                         </div>
                         <div class="input-group advanced-only" data-basis="carcass" style="display:none">
-                            <div class="slider-header"><label>Dressing Yield (%)</label><span class="slider-value" id="valDressing">72</span></div>
+                            <div class="slider-header"><label for="rangeDressing">Dressing Yield (%)</label><span class="slider-value" id="valDressing">72</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeDressing" min="55" max="85" step="1" value="72" />
                             </div>
                         </div>
                         <div class="input-group advanced-only" data-basis="carcass" style="display:none">
-                            <div class="slider-header"><label>Biaya Proses/Ekor (Rp)</label><span class="slider-value" id="valProcessCost">Rp 1.500</span></div>
+                            <div class="slider-header"><label for="rangeProcessCost">Biaya Proses/Ekor (Rp)</label><span class="slider-value" id="valProcessCost">Rp 1.500</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeProcessCost" min="0" max="6000" step="100" value="1500" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Umur Panen (hari)</label><span class="slider-value" id="valHarvestAge">35</span></div>
+                            <div class="slider-header"><label for="rangeHarvestAge">Umur Panen (hari)</label><span class="slider-value" id="valHarvestAge">35</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeHarvestAge" min="20" max="120" step="1" value="35" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Wastage Pakan (%)</label><span class="slider-value" id="valWastage">3.0%</span></div>
+                            <div class="slider-header"><label for="rangeWastage">Wastage Pakan (%)</label><span class="slider-value" id="valWastage">3.0%</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeWastage" min="0" max="15" step="0.5" value="3" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Shrinkage Transport (%)</label><span class="slider-value" id="valShrinkage">2.0%</span></div>
+                            <div class="slider-header"><label for="rangeShrinkage">Shrinkage Transport (%)</label><span class="slider-value" id="valShrinkage">2.0%</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeShrinkage" min="0" max="10" step="0.5" value="2" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Tenaga Kerja / Siklus</label><span class="slider-value" id="valLaborCost">Rp 300.000</span></div>
+                            <div class="slider-header"><label for="rangeLaborCost">Tenaga Kerja / Siklus</label><span class="slider-value" id="valLaborCost">Rp 300.000</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeLaborCost" min="0" max="5000000" step="50000" value="300000" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Overhead / Siklus</label><span class="slider-value" id="valOverheadCost">Rp 200.000</span></div>
+                            <div class="slider-header"><label for="rangeOverheadCost">Overhead / Siklus</label><span class="slider-value" id="valOverheadCost">Rp 200.000</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeOverheadCost" min="0" max="5000000" step="50000" value="200000" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Transport & Komisi</label><span class="slider-value" id="valTransportCost">Rp 150.000</span></div>
+                            <div class="slider-header"><label for="rangeTransportCost">Transport & Komisi</label><span class="slider-value" id="valTransportCost">Rp 150.000</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeTransportCost" min="0" max="3000000" step="50000" value="150000" />
                             </div>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Biaya Pemanas & Listrik</label><span class="slider-value" id="valHeatingCost">Rp 0</span></div>
+                            <div class="slider-header"><label for="rangeHeatingCost">Biaya Pemanas & Listrik</label><span class="slider-value" id="valHeatingCost">Rp 0</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeHeatingCost" min="0" max="5000000" step="50000" value="0" />
                             </div>
                             <small id="heatingHint">Angka awal mengikuti rekomendasi sistem.</small>
                         </div>
                         <div class="input-group">
-                            <div class="slider-header"><label>Biaya Vaksin & Obat</label><span class="slider-value" id="valVaccineCost">Rp 100.000</span></div>
+                            <div class="slider-header"><label for="rangeVaccineCost">Biaya Vaksin & Obat</label><span class="slider-value" id="valVaccineCost">Rp 100.000</span></div>
                             <div class="slider-wrap">
                                 <input type="range" id="rangeVaccineCost" min="0" max="3000000" step="25000" value="100000" />
                             </div>
