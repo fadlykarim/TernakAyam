@@ -1975,53 +1975,55 @@ class ChickenCalc {
 
         const overlay = document.createElement('div');
         overlay.id = 'petokModal';
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.background = 'rgba(47, 81, 50, 0.38)';
-        overlay.style.zIndex = '10000';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
+        overlay.className = 'petok-modal-overlay';
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
 
         const container = document.createElement('div');
-        container.style.background = 'rgba(255,255,252,0.96)';
-        container.style.border = '1px solid rgba(137,173,146,0.4)';
-        container.style.borderRadius = '12px';
-        container.style.padding = '24px';
-        container.style.maxWidth = '600px';
-        container.style.width = '90%';
-        container.style.maxHeight = '80vh';
-        container.style.overflowY = 'auto';
-        container.style.boxShadow = '0 24px 48px rgba(96,122,86,0.24)';
+        container.className = 'petok-modal';
+        container.setAttribute('role', 'document');
 
         const header = document.createElement('div');
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.marginBottom = '16px';
+        header.className = 'petok-modal-header';
 
         const titleEl = document.createElement('h3');
-        titleEl.style.margin = '0';
-        titleEl.style.color = '#2F5132';
+        titleEl.className = 'petok-modal-title';
         titleEl.textContent = title;
+
+        const closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'petok-modal-close';
+        closeBtn.setAttribute('aria-label', 'Tutup');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.addEventListener('click', () => this.closeModal());
 
         const body = document.createElement('div');
         body.className = 'petok-modal-body';
         body.innerHTML = content;
 
         header.appendChild(titleEl);
+        header.appendChild(closeBtn);
         container.appendChild(header);
         container.appendChild(body);
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
+        // Activate animation and lock scroll
+        requestAnimationFrame(() => overlay.classList.add('active'));
+        document.body.classList.add('modal-open');
+
+        // Close when clicking outside
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) this.closeModal();
         });
+        // Prevent overlay close on inner clicks
+        container.addEventListener('click', (e) => e.stopPropagation());
+
+        // ESC to close
+        this._modalKeydownHandler = (evt) => {
+            if (evt.key === 'Escape') this.closeModal();
+        };
+        document.addEventListener('keydown', this._modalKeydownHandler);
     }
 
     closeModal() {
@@ -2034,7 +2036,16 @@ class ChickenCalc {
             }
             captchaWidgetId = null;
         }
-        document.getElementById('petokModal')?.remove();
+        const overlay = document.getElementById('petokModal');
+        if (overlay) {
+            overlay.classList.remove('active');
+            setTimeout(() => overlay.remove(), 140);
+        }
+        document.body.classList.remove('modal-open');
+        if (this._modalKeydownHandler) {
+            document.removeEventListener('keydown', this._modalKeydownHandler);
+            this._modalKeydownHandler = null;
+        }
     }
 
     notify(msg, type = 'info') {

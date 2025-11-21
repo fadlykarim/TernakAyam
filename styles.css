@@ -902,21 +902,82 @@ input[type=range]::-moz-range-track {
 }
 
 /* Modals */
-#petokModal {
+body.modal-open { overflow: hidden; }
+
+#petokModal.petok-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(47, 81, 50, 0.38);
+    z-index: 10000;
     backdrop-filter: blur(3px);
     opacity: 0;
     transform: scale(0.98) translateY(16px);
     transition: opacity 0.28s cubic-bezier(.4,0,.2,1), transform 0.28s cubic-bezier(.4,0,.2,1);
 }
-#petokModal[style*="display: flex"] {
+#petokModal.petok-modal-overlay.active {
     opacity: 1;
     transform: none;
 }
+
+.petok-modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px 20px;
+    width: min(92vw, 640px);
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-md);
+}
+
+.petok-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.petok-modal-title {
+    margin: 0;
+    color: #2F5132;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.petok-modal-close {
+    border: 1px solid var(--border);
+    background: rgba(255,255,254,0.9);
+    color: var(--text-strong);
+    border-radius: 999px;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+.petok-modal-close:hover { box-shadow: var(--shadow-sm); }
 
 .petok-modal-body {
     font-size: 0.95rem;
     color: var(--text);
 }
+
+/* Edit price row */
+.edit-row {
+    background: rgba(255,255,254,0.92);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: 0 8px 20px rgba(41,71,54,0.12);
+}
+.edit-row label { font-weight: 600; color: var(--text-strong); }
+.edit-inline input { background: var(--surface-strong); }
 
 /* Loading */
 .loading {
