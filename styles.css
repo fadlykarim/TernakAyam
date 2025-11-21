@@ -265,7 +265,7 @@ body:not(.auth-ready) .auth-area {
     stroke-width: 2;
     fill: none;
     vertical-align: middle;
-    color: #000;
+    color: inherit;
 }
 
 .btn-action .simple-icon {
