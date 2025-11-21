@@ -132,6 +132,11 @@ async function initGoogleAuth() {
                     });
                     if (error) throw error;
                     await updateAuthUI();
+                    try {
+                        window.chickenCalcInstance?.closeModal();
+                    } catch (_) {
+                        document.getElementById('petokModal')?.remove();
+                    }
                 } catch (e) {
                     alert('Login gagal: ' + e.message);
                 }
@@ -2219,6 +2224,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const sb = getSb();
         sb.auth.onAuthStateChange(async (_, session) => {
             await updateAuthUI(session);
+            if (session?.user) {
+                try {
+                    window.chickenCalcInstance?.closeModal();
+                } catch (_) {
+                    document.getElementById('petokModal')?.remove();
+                }
+            }
         });
         
         console.log('✅ Ready');
