@@ -139,20 +139,9 @@ async function initGoogleAuth() {
             cancel_on_tap_outside: false
         });
 
-        // Render Google button only once
-        if (!googleButtonRendered) {
-            google.accounts.id.renderButton(
-                loginContainer,
-                {
-                    theme: 'outline',
-                    size: 'large',
-                    text: 'signin',
-                    shape: 'pill',
-                    logo_alignment: 'left'
-                }
-            );
-            googleButtonRendered = true;
-        }
+        // Delegate rendering to applyAuthState via updateAuthUI
+        // This prevents double-rendering or rendering when already logged in
+        updateAuthUI();
     };
 
     if (window.google?.accounts?.id) {
