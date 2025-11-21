@@ -1503,9 +1503,9 @@ class ChickenCalc {
                 const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 
-                const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-                const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-                const star = c.is_favorite ? starFilled : starOutline;
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heart = c.is_favorite ? heartFilled : heartOutline;
                 
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
@@ -1517,7 +1517,7 @@ class ChickenCalc {
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#e0b24b">${star}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#ed4956">${heart}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
                                 <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
@@ -1560,9 +1560,9 @@ class ChickenCalc {
                     console.error('Toggle favorite error:', error);
                     return;
                 }
-                const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-                const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-                target.innerHTML = newStatus ? starFilled : starOutline;
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                target.innerHTML = newStatus ? heartFilled : heartOutline;
             });
         });
 
@@ -1980,7 +1980,7 @@ class ChickenCalc {
         }
     }
 
-    modal(title, content) {
+    modal(title, content, onClose) {
         this.closeModal();
 
         const overlay = document.createElement('div');
@@ -2030,7 +2030,10 @@ class ChickenCalc {
         document.body.appendChild(overlay);
 
         overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) this.closeModal();
+            if (e.target === overlay) {
+                this.closeModal();
+                if (typeof onClose === 'function') onClose();
+            }
         });
     }
 
@@ -2111,16 +2114,20 @@ class ChickenCalc {
             </div>
         `;
 
-        this.modal('Pengaturan Advance', html);
+        const onCancel = () => {
+            if (isActivation) {
+                this.toggleAdvancedMode(false, { skipConfigurator: true, skipAdvice: true });
+            }
+        };
+
+        this.modal('Pengaturan Advance', html, onCancel);
 
         const modal = document.querySelector('.petok-modal-body');
         if (!modal) return;
 
         modal.querySelector('#cancelAdvConfig')?.addEventListener('click', () => {
             this.closeModal();
-            if (isActivation) {
-                this.toggleAdvancedMode(false, { skipConfigurator: true, skipAdvice: true });
-            }
+            onCancel();
         });
         modal.querySelector('#saveAdvConfig')?.addEventListener('click', () => {
             const len = Number(modal.querySelector('#customLength')?.value || 0) || null;
