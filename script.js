@@ -136,7 +136,6 @@ async function initGoogleAuth() {
                     alert('Login gagal: ' + e.message);
                 }
             },
-            ux_mode: 'popup',
             cancel_on_tap_outside: false
         });
 
@@ -147,7 +146,7 @@ async function initGoogleAuth() {
                 {
                     theme: 'outline',
                     size: 'large',
-                    shape: 'pill',
+                    text: 'signin',
                     logo_alignment: 'left'
                 }
             );
@@ -236,21 +235,19 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
-            // Re-render button on logout to ensure responsiveness on mobile
-            if (googleAuthReady && window.google?.accounts?.id) {
-                try {
-                    loginContainer.innerHTML = '';
-                    google.accounts.id.renderButton(
-                        loginContainer,
-                        {
-                            theme: 'outline',
-                            size: 'large',
-                            type: 'icon',
-                            logo_alignment: 'left'
-                        }
-                    );
-                    googleButtonRendered = true;
-                } catch (_) {}
+            // Re-render button on logout only if not already rendered
+            if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
+                loginContainer.innerHTML = '';
+                google.accounts.id.renderButton(
+                    loginContainer,
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin',
+                        logo_alignment: 'left'
+                    }
+                );
+                googleButtonRendered = true;
             }
         }
         if (userBox) userBox.style.display = 'none';
@@ -332,7 +329,7 @@ class ChickenCalc {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin_with',
-                        shape: 'pill',
+                        shape: 'rectangular',
                         logo_alignment: 'left'
                     }
                 );

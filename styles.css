@@ -253,8 +253,6 @@ body:not(.auth-ready) .auth-area {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
 }
 
 .simple-icon {
