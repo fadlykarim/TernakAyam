@@ -70,6 +70,7 @@ body {
     height: 32px;
 }
 .top-nav__left, .top-nav__right { min-width: 0; }
+.top-nav__right { display:flex; align-items:center; justify-content:flex-end; gap: 10px; }
 .app-name { font-weight: 700; color: #000; letter-spacing: -0.02em; font-size: 1.1rem; }
 .top-nav__center { display: none; }
 .nav-link { display: none; }
@@ -1067,7 +1068,7 @@ input[type=range]::-moz-range-track {
     }
 
         .google-signin-container {
-            justify-content: flex-start;
+            justify-content: flex-end;
         }
     }
 

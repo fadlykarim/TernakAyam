@@ -113,9 +113,14 @@ async function initGoogleAuth() {
     await loadConfig();
     
     if (!CONFIG || CONFIG.googleClientId.includes('YOUR_')) return;
+
+    const loginContainer = document.getElementById('login-btn');
+    if (!loginContainer) return;
+
     const setup = () => {
         if (googleAuthReady || !window.google?.accounts?.id) return;
         googleAuthReady = true;
+
         google.accounts.id.initialize({
             client_id: CONFIG.googleClientId,
             callback: async (response) => {
@@ -133,15 +138,30 @@ async function initGoogleAuth() {
             },
             cancel_on_tap_outside: false
         });
+
+        // Render Google button only once
+        if (!googleButtonRendered) {
+            google.accounts.id.renderButton(
+                loginContainer,
+                {
+                    theme: 'outline',
+                    size: 'large',
+                    text: 'signin',
+                    logo_alignment: 'left'
+                }
+            );
+            googleButtonRendered = true;
+        }
     };
 
     if (window.google?.accounts?.id) {
         setup();
-    } else {
-        const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-        if (gisScript) {
-            gisScript.addEventListener('load', setup, { once: true });
-        }
+        return;
+    }
+
+    const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+    if (gisScript) {
+        gisScript.addEventListener('load', setup, { once: true });
     }
 }
 
@@ -215,6 +235,20 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
+            // Re-render button on logout only if not already rendered
+            if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
+                loginContainer.innerHTML = '';
+                google.accounts.id.renderButton(
+                    loginContainer,
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        text: 'signin',
+                        logo_alignment: 'left'
+                    }
+                );
+                googleButtonRendered = true;
+            }
         }
         if (userBox) userBox.style.display = 'none';
         if (userAvatar) {
@@ -2178,12 +2212,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         initGoogleAuth();
         window.chickenCalcInstance = new ChickenCalc();
         await updateAuthUI();
-        const loginBtnTrigger = document.getElementById('trigger-login-modal');
-        if (loginBtnTrigger) {
-            loginBtnTrigger.addEventListener('click', () => {
-                window.chickenCalcInstance?.showLoginModal();
-            });
-        }
         
         // Setup auth state listener
         const sb = getSb();
