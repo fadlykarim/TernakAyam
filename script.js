@@ -1708,9 +1708,8 @@ class ChickenCalc {
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 
                 const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="#E91E63" stroke="#E91E63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heart = c.is_favorite ? heartFilled : heartOutline;
-                const heartColor = c.is_favorite ? '#E91E63' : '#567a60';
                 
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
@@ -1722,7 +1721,7 @@ class ChickenCalc {
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:${heartColor}">${heart}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#E91E63">${heart}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
                                 <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
@@ -1756,27 +1755,31 @@ class ChickenCalc {
         document.querySelectorAll('.btn-fav').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const target = e.currentTarget;
-                // Prevent double clicks
-                if (target.disabled) return;
-                target.disabled = true;
-                
                 const id = target.dataset.id;
+                
+                // Optimistic UI update
+                const currentHtml = target.innerHTML;
+                const isFilled = currentHtml.includes('fill="currentColor"');
+                
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                
+                target.innerHTML = isFilled ? heartOutline : heartFilled;
+
                 try {
                     const sb = await getSb();
                     const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
                         calculation_id: id
                     });
                     if (error) throw error;
-
-                    const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                    const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="#E91E63" stroke="#E91E63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                    
+                    // Ensure final state matches server
                     target.innerHTML = newStatus ? heartFilled : heartOutline;
-                    // Update color for outline state too if needed, but usually outline is gray/current
-                    target.style.color = newStatus ? '#E91E63' : '#567a60'; 
-                } catch (err) {
-                    console.error('Toggle favorite error:', err);
-                } finally {
-                    target.disabled = false;
+                } catch (error) {
+                    console.error('Toggle favorite error:', error);
+                    // Revert on error
+                    target.innerHTML = currentHtml;
+                    this.notify('Gagal update favorite', 'error');
                 }
             });
         });
