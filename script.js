@@ -1314,16 +1314,16 @@ class ChickenCalc {
     showCaptchaModal() {
         const html = `
             <div id="captchaStep" style="text-align:center">
-                <p style="color:#567a60;margin-bottom:16px">Verifikasi dulu ya:</p>
+                <p style="color:var(--text-muted);margin-bottom:16px">Verifikasi dulu ya:</p>
                 <div id="hcaptcha-container"></div>
             </div>
             <div id="notesStep" style="display:none">
-                <p style="color:#567a60;margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Verifikasi berhasil!</p>
-                <label style="display:block;margin-bottom:8px;font-weight:500;color:#24412F">Catatan (opsional):</label>
-                <textarea id="notesInput" placeholder="Tambahkan catatan untuk perhitungan ini..." style="width:100%;min-height:80px;padding:12px;border:1px solid rgba(137,173,146,0.4);border-radius:8px;font-family:inherit;resize:vertical;background:rgba(255,255,254,0.84)"></textarea>
+                <p style="color:var(--text-muted);margin-bottom:12px"><svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg> Verifikasi berhasil!</p>
+                <label style="display:block;margin-bottom:8px;font-weight:600;color:var(--text-strong)">Catatan (opsional):</label>
+                <textarea id="notesInput" class="advanced-notes" placeholder="Tambahkan catatan untuk perhitungan ini..." style="min-height:80px"></textarea>
                 <div style="display:flex;gap:12px;margin-top:16px;justify-content:flex-end">
-                    <button id="cancelSave" style="padding:10px 20px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567a60">Batal</button>
-                    <button id="confirmSave" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer;font-weight:500">Simpan</button>
+                    <button id="cancelSave" class="btn-action ghost">Batal</button>
+                    <button id="confirmSave" class="btn-action accent">Simpan</button>
                 </div>
             </div>
         `;
@@ -1490,13 +1490,13 @@ class ChickenCalc {
                 return;
             }
 
-            let html = '<div style="max-height:400px;overflow-y:auto">';
+            let html = '<div style="max-height:400px;overflow-y:auto;display:flex;flex-direction:column;gap:12px">';
             history.forEach(c => {
                 const date = new Date(c.calculation_date).toLocaleDateString('id-ID');
                 const iconUp = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>';
                 const iconDown = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>';
                 const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
-                const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
+                const col = c.keuntungan_bersih > 0 ? 'var(--accent)' : 'var(--danger)';
                 
                 const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
                 const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
@@ -1506,22 +1506,20 @@ class ChickenCalc {
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
                 html += `
-                    <div style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
-                        <div style="display:flex;justify-content:space-between">
-                            <div style="flex:1">
-                                <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                                    <span>${c.chicken_type} - ${c.populasi} ekor</span>
-                                    ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#e0b24b">${star}</button>
-                                </div>
-                                <div style="font-size:0.85rem;color:#567a60">${date}${basisInfo}</div>
-                                <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
-                                ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem">"${c.notes}"</div>` : ''}
+                    <div class="stat-card" style="padding:16px;flex-direction:row;justify-content:space-between;align-items:flex-start">
+                        <div style="flex:1">
+                            <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+                                <span>${c.chicken_type} - ${c.populasi} ekor</span>
+                                ${modeBadge}
+                                <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:var(--info);padding:0">${star}</button>
                             </div>
-                            <div style="display:flex;flex-direction:column;gap:4px">
-                                <button class="btn-load" data-id="${c.id}" style="background:#3F8F5F;color:#f2fff4;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">Muat</button>
-                                <button class="btn-del" data-id="${c.id}" style="background:#C8513A;color:#fff;border:none;padding:4px 8px;border-radius:4px;cursor:pointer">Hapus</button>
-                            </div>
+                            <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px">${date}${basisInfo}</div>
+                            <div style="font-weight:700;color:${col};display:flex;align-items:center;gap:6px;font-size:1.1rem">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
+                            ${c.notes ? `<div style="font-style:italic;color:var(--text-soft);font-size:0.85rem;margin-top:4px">"${c.notes}"</div>` : ''}
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:8px">
+                            <button class="btn-load btn-action accent" data-id="${c.id}" style="padding:6px 12px;font-size:0.85rem">Muat</button>
+                            <button class="btn-del btn-action ghost" data-id="${c.id}" style="padding:6px 12px;font-size:0.85rem;color:var(--danger);border-color:rgba(200,81,58,0.3)">Hapus</button>
                         </div>
                     </div>
                 `;
@@ -1710,20 +1708,20 @@ class ChickenCalc {
             this.applyAdvancedState();
             
             const html = `
-                <form id="profileForm" style="display:grid;gap:16px;color:#24412F">
-                    <div>
-                        <h4>Info Personal</h4>
-                        <input type="text" id="fullName" value="${escapeAttr(displayName)}" placeholder="Nama" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
-                        <input type="email" value="${escapeAttr(p.email || user.email)}" disabled style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.28);border-radius:8px;background:rgba(255,255,254,0.75);color:#567a60">
-                        <input type="tel" id="phone" value="${escapeAttr(displayPhone)}" placeholder="Telp" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
+                <form id="profileForm" style="display:grid;gap:24px;color:var(--text-strong)">
+                    <div class="input-group">
+                        <h4 style="margin-bottom:8px">Info Personal</h4>
+                        <input type="text" id="fullName" value="${escapeAttr(displayName)}" placeholder="Nama" style="margin-bottom:8px">
+                        <input type="email" value="${escapeAttr(p.email || user.email)}" disabled style="margin-bottom:8px;background:rgba(255,255,254,0.75);color:var(--text-muted)">
+                        <input type="tel" id="phone" value="${escapeAttr(displayPhone)}" placeholder="Telp">
                     </div>
-                    <div>
-                        <h4>Peternakan</h4>
-                        <input type="text" id="farmName" value="${escapeAttr(displayFarmName)}" placeholder="Nama Peternakan" style="width:100%;padding:10px;margin:8px 0;border:1px solid rgba(137,173,146,0.4);border-radius:8px;background:rgba(255,255,254,0.84)">
+                    <div class="input-group">
+                        <h4 style="margin-bottom:8px">Peternakan</h4>
+                        <input type="text" id="farmName" value="${escapeAttr(displayFarmName)}" placeholder="Nama Peternakan">
                     </div>
-                    <div style="display:flex;gap:12px;justify-content:flex-end">
-                        <button type="button" id="cancelBtn" style="padding:10px 20px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567a60">Batal</button>
-                        <button type="submit" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer">Simpan</button>
+                    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px">
+                        <button type="button" id="cancelBtn" class="btn-action ghost">Batal</button>
+                        <button type="submit" class="btn-action accent">Simpan</button>
                     </div>
                 </form>
             `;
@@ -1975,55 +1973,53 @@ class ChickenCalc {
 
         const overlay = document.createElement('div');
         overlay.id = 'petokModal';
-        overlay.className = 'petok-modal-overlay';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'rgba(47, 81, 50, 0.38)';
+        overlay.style.zIndex = '10000';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
         overlay.setAttribute('role', 'dialog');
         overlay.setAttribute('aria-modal', 'true');
 
         const container = document.createElement('div');
-        container.className = 'petok-modal';
-        container.setAttribute('role', 'document');
+        container.style.background = 'rgba(255,255,252,0.96)';
+        container.style.border = '1px solid rgba(137,173,146,0.4)';
+        container.style.borderRadius = '12px';
+        container.style.padding = '24px';
+        container.style.maxWidth = '600px';
+        container.style.width = '90%';
+        container.style.maxHeight = '80vh';
+        container.style.overflowY = 'auto';
+        container.style.boxShadow = '0 24px 48px rgba(96,122,86,0.24)';
 
         const header = document.createElement('div');
-        header.className = 'petok-modal-header';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.marginBottom = '16px';
 
         const titleEl = document.createElement('h3');
-        titleEl.className = 'petok-modal-title';
+        titleEl.style.margin = '0';
+        titleEl.style.color = '#2F5132';
         titleEl.textContent = title;
-
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'petok-modal-close';
-        closeBtn.setAttribute('aria-label', 'Tutup');
-        closeBtn.innerHTML = '&times;';
-        closeBtn.addEventListener('click', () => this.closeModal());
 
         const body = document.createElement('div');
         body.className = 'petok-modal-body';
         body.innerHTML = content;
 
         header.appendChild(titleEl);
-        header.appendChild(closeBtn);
         container.appendChild(header);
         container.appendChild(body);
         overlay.appendChild(container);
         document.body.appendChild(overlay);
 
-        // Activate animation and lock scroll
-        requestAnimationFrame(() => overlay.classList.add('active'));
-        document.body.classList.add('modal-open');
-
-        // Close when clicking outside
         overlay.addEventListener('click', (e) => {
             if (e.target === overlay) this.closeModal();
         });
-        // Prevent overlay close on inner clicks
-        container.addEventListener('click', (e) => e.stopPropagation());
-
-        // ESC to close
-        this._modalKeydownHandler = (evt) => {
-            if (evt.key === 'Escape') this.closeModal();
-        };
-        document.addEventListener('keydown', this._modalKeydownHandler);
     }
 
     closeModal() {
@@ -2036,16 +2032,7 @@ class ChickenCalc {
             }
             captchaWidgetId = null;
         }
-        const overlay = document.getElementById('petokModal');
-        if (overlay) {
-            overlay.classList.remove('active');
-            setTimeout(() => overlay.remove(), 140);
-        }
-        document.body.classList.remove('modal-open');
-        if (this._modalKeydownHandler) {
-            document.removeEventListener('keydown', this._modalKeydownHandler);
-            this._modalKeydownHandler = null;
-        }
+        document.getElementById('petokModal')?.remove();
     }
 
     notify(msg, type = 'info') {
@@ -2062,22 +2049,22 @@ class ChickenCalc {
 
         const html = `
             <div class="advanced-config">
-                <p style="color:#567A60;margin-bottom:12px">Masukkan detail spesifikasi kandang Anda agar rekomendasi biaya lebih akurat.</p>
+                <p style="color:var(--text-muted);margin-bottom:12px">Masukkan detail spesifikasi kandang Anda agar rekomendasi biaya lebih akurat.</p>
                 
                 <div id="customFields" style="margin-top:16px;display:grid;gap:12px">
-                    <div style="display:grid;gap:6px">
+                    <div class="input-group">
                         <label>Panjang kandang (m)</label>
                         <input type="number" id="customLength" min="1" step="0.5" value="${custom.length ?? ''}" placeholder="Misal 12">
                     </div>
-                    <div style="display:grid;gap:6px">
+                    <div class="input-group">
                         <label>Lebar kandang (m)</label>
                         <input type="number" id="customWidth" min="1" step="0.5" value="${custom.width ?? ''}" placeholder="Misal 8">
                     </div>
-                    <div style="display:grid;gap:6px">
+                    <div class="input-group">
                         <label>Tinggi rata-rata (m)</label>
                         <input type="number" id="customHeight" min="1" step="0.5" value="${custom.height ?? ''}" placeholder="Misal 2.8">
                     </div>
-                    <div style="display:grid;gap:6px">
+                    <div class="input-group">
                         <label>Sistem ventilasi</label>
                         <select id="customVentilation">
                             <option value="konvensional" ${custom.ventilation==='konvensional'?'selected':''}>Konvensional (ventilasi alami)</option>
@@ -2085,8 +2072,8 @@ class ChickenCalc {
                             <option value="mixed" ${custom.ventilation==='mixed'?'selected':''}>Campuran</option>
                         </select>
                     </div>
-                    <fieldset style="border:1px solid rgba(137,173,146,0.45);padding:12px;border-radius:10px;display:grid;gap:8px">
-                        <legend style="padding:0 6px;color:#3F8F5F;font-weight:600">Fitur tambahan</legend>
+                    <fieldset style="border:1px solid var(--border);padding:12px;border-radius:10px;display:grid;gap:8px">
+                        <legend style="padding:0 6px;color:var(--primary);font-weight:600">Fitur tambahan</legend>
                         ${[{
                             key: 'autoBrooder', label: 'Ada pemanas otomatis atau gas brooder'
                         }, {
@@ -2096,7 +2083,7 @@ class ChickenCalc {
                         }, {
                             key: 'lighting', label: 'Menggunakan lampu LED hemat energi'
                         }].map(item => `
-                            <label style="display:flex;gap:8px;align-items:center">
+                            <label style="display:flex;gap:8px;align-items:center;cursor:pointer">
                                 <input type="checkbox" data-extra="${item.key}" ${extras.includes(item.key)?'checked':''}>
                                 <span>${item.label}</span>
                             </label>
@@ -2104,8 +2091,8 @@ class ChickenCalc {
                     </fieldset>
                 </div>
                 <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px">
-                    <button type="button" id="cancelAdvConfig" style="padding:10px 18px;border:1px solid rgba(137,173,146,0.4);background:#fff;border-radius:6px;cursor:pointer;color:#567A60">Batal</button>
-                    <button type="button" id="saveAdvConfig" style="padding:10px 20px;border:none;background:#3F8F5F;color:#f2fff4;border-radius:6px;cursor:pointer">Simpan & Update</button>
+                    <button type="button" id="cancelAdvConfig" class="btn-action ghost">Batal</button>
+                    <button type="button" id="saveAdvConfig" class="btn-action accent">Simpan & Update</button>
                 </div>
             </div>
         `;
