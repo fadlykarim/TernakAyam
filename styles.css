@@ -72,9 +72,8 @@ body {
 .top-nav__left, .top-nav__right { min-width: 0; }
 .app-name { font-weight: 700; color: #000; letter-spacing: -0.02em; font-size: 1.1rem; }
 .top-nav__center { display: none; }
-.nav-link { display: none; } /* removed future nav placeholder usage */
-
-/* Deleted .btn-link (unused) */
+.nav-link { display: none; }
+.btn-link { background: none; border: none; cursor: pointer; font: inherit; }
 
 .page-shell {
     max-width: 1180px;
@@ -196,7 +195,29 @@ body {
     transform: translateX(22px);
 }
 
-/* Removed .advanced-actions and .btn-ghost (not referenced) */
+.advanced-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.btn-ghost {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid rgba(63,143,95,0.4);
+    background: rgba(255,255,254,0.92);
+    color: #3F8F5F;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s ease, border 0.2s ease;
+}
+
+.btn-ghost:hover {
+    background: rgba(63,143,95,0.12);
+    border-color: rgba(63,143,95,0.7);
+}
 
 .history-tag {
     display: inline-flex;
@@ -211,7 +232,18 @@ body {
     letter-spacing: 0.4px;
 }
 
-/* Removed .auth-area (legacy) */
+/* Auth Area */
+.auth-area {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 14px;
+    min-width: 220px;
+}
+
+body:not(.auth-ready) .auth-area {
+    visibility: hidden;
+}
 
 .google-signin-container {
     min-height: 46px;
@@ -220,8 +252,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
 }
 
 .simple-icon {
@@ -263,7 +293,9 @@ body {
 }
 
 
-/* Removed .user-info (unused) */
+.user-info {
+    display: none;
+}
 
 .profile-trigger {
     cursor: pointer;
@@ -274,7 +306,22 @@ body {
     outline-offset: 2px;
 }
 
-/* Removed .auth-btn (unused) */
+.auth-btn {
+    padding: 10px 18px;
+    font-size: 0.92rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(63, 143, 95, 0.45);
+    background: rgba(126, 214, 144, 0.22);
+    cursor: pointer;
+    color: var(--text-strong);
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(41, 71, 54, 0.22);
+}
 
 .logout-btn {
     color: var(--danger);
@@ -343,7 +390,12 @@ body.logged-in .dashboard {
     letter-spacing: -0.02em;
 }
 
-/* Removed .muted (not present in HTML) */
+.muted {
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 500;
+    max-width: 28rem;
+}
 
 .helper-text {
     display: block;
@@ -784,7 +836,17 @@ input[type=range]::-moz-range-track {
     margin-top: 8px;
 }
 
-/* Removed .advanced-notes (textarea uses id without class) */
+.advanced-notes {
+    width: 100%;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(137, 173, 146, 0.45);
+    background: rgba(255, 255, 254, 0.9);
+    resize: vertical;
+    min-height: 90px;
+    color: var(--text-strong);
+    font-family: inherit;
+}
 
 .btn-regen {
     margin-top: 10px;
