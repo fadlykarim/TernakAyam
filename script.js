@@ -268,6 +268,11 @@ function applyAuthState(session) {
         // if (historyBtn) historyBtn.style.display = 'none';
         // if (saveInfo) saveInfo.style.display = 'none';
         localStorage.removeItem('pp_user');
+        
+        // Force disable advanced mode on logout
+        if (window.chickenCalcInstance) {
+            window.chickenCalcInstance.toggleAdvancedMode(false, { skipConfigurator: true, skipAdvice: true });
+        }
     }
 
     if (document.body && !document.body.classList.contains('auth-ready')) {
