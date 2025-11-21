@@ -111,8 +111,8 @@ async function ensureProfileRow(user) {
 
 async function initGoogleAuth() {
     await loadConfig();
+    
     if (!CONFIG || CONFIG.googleClientId.includes('YOUR_')) return;
-
     const setup = () => {
         if (googleAuthReady || !window.google?.accounts?.id) return;
         googleAuthReady = true;
@@ -133,15 +133,16 @@ async function initGoogleAuth() {
             },
             cancel_on_tap_outside: false
         });
-        // Tidak render button di navbar lagi (modal only)
     };
 
     if (window.google?.accounts?.id) {
         setup();
-        return;
+    } else {
+        const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+        if (gisScript) {
+            gisScript.addEventListener('load', setup, { once: true });
+        }
     }
-    const gisScript = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
-    if (gisScript) gisScript.addEventListener('load', setup, { once: true });
 }
 
 async function logout() {
@@ -178,8 +179,12 @@ async function logout() {
 function applyAuthState(session) {
     const loginContainer = document.getElementById('login-btn');
     const userBox = document.getElementById('user-box');
-    const userAvatar = document.getElementById('user-avatar');
     const userName = document.getElementById('user-name');
+    const userAvatar = document.getElementById('user-avatar');
+    // Buttons are now always visible, but gated by checkAuth()
+    // const saveBtn = document.getElementById('saveCalculation');
+    // const historyBtn = document.getElementById('viewHistory');
+    // const saveInfo = document.getElementById('saveInfo');
 
     if (session?.user) {
         const identity = deriveUserIdentity(session.user);
@@ -191,13 +196,16 @@ function applyAuthState(session) {
                 userAvatar.src = identity.picture;
                 userAvatar.alt = identity.fullName || session.user.email || 'Foto Profil';
                 userAvatar.style.display = 'block';
-                userBox?.classList.add('has-avatar');
+                if (userBox) userBox.classList.add('has-avatar');
             } else {
                 userAvatar.removeAttribute('src');
                 userAvatar.style.display = 'none';
-                userBox?.classList.remove('has-avatar');
+                if (userBox) userBox.classList.remove('has-avatar');
             }
         }
+        // if (saveBtn) saveBtn.style.display = 'inline-block';
+        // if (historyBtn) historyBtn.style.display = 'inline-block';
+        // if (saveInfo) saveInfo.style.display = 'inline';
         localStorage.setItem('pp_user', JSON.stringify({
             id: session.user.id,
             email: session.user.email,
@@ -205,21 +213,26 @@ function applyAuthState(session) {
             avatar: identity.picture || null
         }));
     } else {
-        if (loginContainer) loginContainer.style.display = 'flex';
+        if (loginContainer) {
+            loginContainer.style.display = 'flex';
+        }
         if (userBox) userBox.style.display = 'none';
         if (userAvatar) {
             userAvatar.removeAttribute('src');
             userAvatar.style.display = 'none';
         }
-        userBox?.classList.remove('has-avatar');
+        if (userBox) userBox.classList.remove('has-avatar');
+        // Buttons remain visible
+        // if (saveBtn) saveBtn.style.display = 'none';
+        // if (historyBtn) historyBtn.style.display = 'none';
+        // if (saveInfo) saveInfo.style.display = 'none';
         localStorage.removeItem('pp_user');
     }
+
     if (document.body && !document.body.classList.contains('auth-ready')) {
         document.body.classList.add('auth-ready');
     }
-}
-
-async function updateAuthUI(sessionOverride) {
+}async function updateAuthUI(sessionOverride) {
     if (sessionOverride !== undefined) {
         applyAuthState(sessionOverride);
         if (sessionOverride?.user) {
@@ -320,6 +333,74 @@ class ChickenCalc {
         this.bind();
         this.applyAdvancedState();
         this.fetchPrice('kampung');
+    }
+
+    loadAdvancedSettings() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('pp_advanced') || 'null');
+            if (saved && typeof saved === 'object') {
+                return {
+                    enabled: !!saved.enabled,
+                    basis: saved.basis || 'live',
+                    dressing: saved.dressing ?? 0.72,
+                    processCost: saved.processCost ?? 1500,
+                    harvestAge: saved.harvestAge ?? 35,
+                    wastagePct: saved.wastagePct ?? 0.03,
+                    shrinkagePct: saved.shrinkagePct ?? 0.02,
+                    laborCost: saved.laborCost ?? 300000,
+                    overheadCost: saved.overheadCost ?? 200000,
+                    transportCost: saved.transportCost ?? 150000,
+                    heatingCost: saved.heatingCost ?? 0,
+                    vaccineCost: saved.vaccineCost ?? 100000,
+                    electricityCost: saved.electricityCost ?? 0,
+                    notes: saved.notes || '',
+                    custom: saved.custom || {
+                        length: null,
+                        width: null,
+                        height: null,
+                        ventilation: null,
+                        extras: []
+                    },
+                    adviceMeta: saved.adviceMeta || {
+                        lastSync: null,
+                        snapshot: null
+                    }
+                };
+            }
+        } catch (e) {
+            console.warn('Failed to load advanced settings', e);
+        }
+        return {
+            enabled: false,
+            basis: 'live',
+            dressing: 0.72,
+            processCost: 1500,
+            harvestAge: 35,
+            wastagePct: 0.03,
+            shrinkagePct: 0.02,
+            laborCost: 300000,
+            overheadCost: 200000,
+            transportCost: 150000,
+            heatingCost: 0,
+            vaccineCost: 100000,
+            electricityCost: 0,
+            notes: '',
+            custom: {
+                length: null,
+                width: null,
+                height: null,
+                ventilation: null,
+                extras: []
+            },
+            adviceMeta: {
+                lastSync: null,
+                snapshot: null
+            }
+        };
+    }
+
+    persistAdvancedSettings() {
+        localStorage.setItem('pp_advanced', JSON.stringify(this.advanced));
     }
 
     applyAdvancedState() {
@@ -2097,11 +2178,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         initGoogleAuth();
         window.chickenCalcInstance = new ChickenCalc();
         await updateAuthUI();
-
-        // Bind placeholder login button to modal invocation
-        document.getElementById('openLoginModal')?.addEventListener('click', () => {
-            window.chickenCalcInstance?.showLoginModal();
-        });
+        const loginBtnTrigger = document.getElementById('trigger-login-modal');
+        if (loginBtnTrigger) {
+            loginBtnTrigger.addEventListener('click', () => {
+                window.chickenCalcInstance?.showLoginModal();
+            });
+        }
         
         // Setup auth state listener
         const sb = getSb();
