@@ -1707,8 +1707,8 @@ class ChickenCalc {
                 const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 
-                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heart = c.is_favorite ? heartFilled : heartOutline;
                 
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
@@ -1752,16 +1752,26 @@ class ChickenCalc {
     }
 
     bindHistoryBtns() {
-        document.querySelectorAll('.btn-fav').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
+        const modalBody = document.querySelector('.petok-modal-body');
+        if (!modalBody || modalBody.dataset.hasListeners) return;
+        
+        modalBody.dataset.hasListeners = 'true';
+
+        modalBody.addEventListener('click', async (e) => {
+            const btnFav = e.target.closest('.btn-fav');
+            const btnLoad = e.target.closest('.btn-load');
+            const btnDel = e.target.closest('.btn-del');
+
+            if (btnFav) {
                 e.stopPropagation();
-                const target = e.currentTarget;
+                e.preventDefault();
+                const target = btnFav;
                 const id = target.dataset.id;
                 
-                // Optimistic UI update
+                // Optimistic UI
                 const isFilled = target.innerHTML.includes('fill="currentColor"');
-                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 
                 target.innerHTML = isFilled ? heartOutline : heartFilled;
 
@@ -1772,55 +1782,60 @@ class ChickenCalc {
                     });
                     if (error) throw error;
                     
-                    // Ensure UI matches server state
+                    // Sync with server state
                     target.innerHTML = newStatus ? heartFilled : heartOutline;
                 } catch (error) {
                     console.error('Toggle favorite error:', error);
-                    // Revert on error
                     target.innerHTML = isFilled ? heartFilled : heartOutline;
                     this.notify('Gagal mengubah favorit', 'error');
                 }
-            });
-        });
+                return;
+            }
 
-        document.querySelectorAll('.btn-load').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const id = e.currentTarget.dataset.id;
-                const sb = await getSb();
-                const { data: calc, error } = await sb
-                    .from('calculation_history')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
-                if (error) {
+            if (btnLoad) {
+                const id = btnLoad.dataset.id;
+                try {
+                    const sb = await getSb();
+                    const { data: calc, error } = await sb
+                        .from('calculation_history')
+                        .select('*')
+                        .eq('id', id)
+                        .single();
+                    
+                    if (error) throw error;
+                    if (calc) {
+                        this.loadCalc(calc);
+                        this.closeModal();
+                        this.notify('Loaded', 'success');
+                    }
+                } catch (error) {
                     console.error('Load calculation error:', error);
-                    return;
+                    this.notify('Gagal memuat data', 'error');
                 }
-                if (calc) {
-                    this.loadCalc(calc);
-                    this.closeModal();
-                    this.notify('Loaded', 'success');
-                }
-            });
-        });
+                return;
+            }
 
-        document.querySelectorAll('.btn-del').forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                if (!confirm('Hapus?')) return;
-                const target = e.currentTarget;
+            if (btnDel) {
+                if (!confirm('Hapus riwayat ini?')) return;
+                const target = btnDel;
                 const id = target.dataset.id;
-                const sb = await getSb();
-                const { error } = await sb.rpc('delete_calculation', {
-                    calculation_id: id
-                });
-                if (error) {
+                
+                try {
+                    const sb = await getSb();
+                    const { error } = await sb.rpc('delete_calculation', {
+                        calculation_id: id
+                    });
+                    if (error) throw error;
+                    
+                    const item = target.closest('.history-item');
+                    if (item) item.remove();
+                    this.notify('Terhapus', 'success');
+                } catch (error) {
                     console.error('Delete calculation error:', error);
-                    this.notify('Error', 'error');
-                    return;
+                    this.notify('Gagal menghapus', 'error');
                 }
-                target.closest('.history-item').remove();
-                this.notify('Deleted', 'success');
-            });
+                return;
+            }
         });
     }
 
