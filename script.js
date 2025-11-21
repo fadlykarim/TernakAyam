@@ -1204,6 +1204,9 @@ class ChickenCalc {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '75%',
+                layout: {
+                    padding: 20
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
