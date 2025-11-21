@@ -136,6 +136,7 @@ async function initGoogleAuth() {
                     alert('Login gagal: ' + e.message);
                 }
             },
+            ux_mode: 'popup',
             cancel_on_tap_outside: false
         });
 
@@ -146,8 +147,9 @@ async function initGoogleAuth() {
                 {
                     theme: 'outline',
                     size: 'large',
-                    text: 'signin',
-                    logo_alignment: 'left'
+                    text: 'signin_with',
+                    logo_alignment: 'left',
+                    shape: 'pill'
                 }
             );
             googleButtonRendered = true;
@@ -235,19 +237,22 @@ function applyAuthState(session) {
     } else {
         if (loginContainer) {
             loginContainer.style.display = 'flex';
-            // Re-render button on logout only if not already rendered
-            if (googleAuthReady && window.google?.accounts?.id && !googleButtonRendered) {
-                loginContainer.innerHTML = '';
-                google.accounts.id.renderButton(
-                    loginContainer,
-                    {
-                        theme: 'outline',
-                        size: 'large',
-                        text: 'signin',
-                        logo_alignment: 'left'
-                    }
-                );
-                googleButtonRendered = true;
+            // Re-render button on logout to ensure responsiveness on mobile
+            if (googleAuthReady && window.google?.accounts?.id) {
+                try {
+                    loginContainer.innerHTML = '';
+                    google.accounts.id.renderButton(
+                        loginContainer,
+                        {
+                            theme: 'outline',
+                            size: 'large',
+                            text: 'signin_with',
+                            logo_alignment: 'left',
+                            shape: 'pill'
+                        }
+                    );
+                    googleButtonRendered = true;
+                } catch (_) {}
             }
         }
         if (userBox) userBox.style.display = 'none';
@@ -329,7 +334,7 @@ class ChickenCalc {
                         theme: 'outline',
                         size: 'large',
                         text: 'signin_with',
-                        shape: 'rectangular',
+                        shape: 'pill',
                         logo_alignment: 'left'
                     }
                 );
