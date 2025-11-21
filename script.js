@@ -1550,7 +1550,8 @@ class ChickenCalc {
     bindHistoryBtns() {
         document.querySelectorAll('.btn-fav').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
+                const target = e.currentTarget;
+                const id = target.dataset.id;
                 const sb = getSb();
                 const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
                     calculation_id: id
@@ -1561,7 +1562,7 @@ class ChickenCalc {
                 }
                 const starOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
                 const starFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="fill:currentColor" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-                e.target.innerHTML = newStatus ? starFilled : starOutline;
+                target.innerHTML = newStatus ? starFilled : starOutline;
             });
         });
 
@@ -1649,11 +1650,7 @@ class ChickenCalc {
     }
 
     async showProfile() {
-        const user = JSON.parse(localStorage.getItem('pp_user') || 'null');
-        if (!user) {
-            alert('Login dulu');
-            return;
-        }
+        if (!this.checkAuth()) return;
 
         if (this.profileLoading) {
             return;
