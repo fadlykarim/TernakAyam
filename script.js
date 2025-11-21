@@ -1079,7 +1079,12 @@ class ChickenCalc {
         const profit = revenue != null ? revenue - totalCost : null;
         const margin = revenue && revenue > 0 ? profit / revenue : null;
         const productionKg = carcassKg && carcassKg > 0 ? carcassKg : null;
-        const costPerKg = productionKg ? totalCost / productionKg : null;
+
+        // Cost per Kg is always based on Gross Live Weight (Farm Gate)
+        const grossLiveKg = harvest * weight;
+        const costPerKg = grossLiveKg > 0 ? totalCost / grossLiveKg : null;
+
+        // Break Even is based on Sellable Weight (Production Kg)
         const breakEven = productionKg ? totalCost / productionKg : null;
         const epef = (survival * 100 * weight * 100) / (fcr * harvestAge);
 
