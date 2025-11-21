@@ -1212,14 +1212,10 @@ class ChickenCalc {
                     tooltip: {
                         callbacks: {
                             label: (context) => {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
                                 if (context.parsed !== null) {
-                                    label += new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.parsed);
+                                    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(context.parsed);
                                 }
-                                return label;
+                                return '';
                             }
                         }
                     }

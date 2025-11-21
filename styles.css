@@ -26,7 +26,7 @@
     --info: #e0b24b;
     --warn: #d9772a;
     --danger: #c8513a;
-    --radius-lg: 22px;
+    --radius-lg: 28px;
     --radius-md: 16px;
     --radius-sm: 12px;
     --shadow-sm: 0 14px 28px rgba(41, 71, 54, 0.18);
@@ -127,10 +127,10 @@ body {
 }
 
 .advanced-toggle-row {
-    margin: 18px 0 12px;
-    padding: 14px 18px;
+    margin: 24px 0 16px;
+    padding: 16px 24px;
     border: 1px solid rgba(137,173,146,0.35);
-    border-radius: 10px;
+    border-radius: var(--radius-lg);
     background: rgba(255,255,254,0.88);
     display: flex;
     align-items: center;
@@ -158,7 +158,7 @@ body {
     position: relative;
     width: 54px;
     height: 30px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: rgba(137,173,146,0.32);
     border: 1px solid rgba(137,173,146,0.4);
     cursor: pointer;
@@ -205,7 +205,7 @@ body {
 
 .btn-ghost {
     padding: 8px 14px;
-    border-radius: 6px;
+    border-radius: 50px;
     border: 1px solid rgba(63,143,95,0.4);
     background: rgba(255,255,254,0.92);
     color: #3F8F5F;
@@ -223,7 +223,7 @@ body {
     display: inline-flex;
     align-items: center;
     padding: 2px 8px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: rgba(63,143,95,0.15);
     color: #2F5132;
     font-size: 0.75rem;
@@ -309,7 +309,7 @@ body:not(.auth-ready) .auth-area {
 .auth-btn {
     padding: 10px 18px;
     font-size: 0.92rem;
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     border: 1px solid rgba(63, 143, 95, 0.45);
     background: rgba(126, 214, 144, 0.22);
     cursor: pointer;
@@ -356,7 +356,7 @@ body:not(.auth-ready) .auth-area {
 .main-content {
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 32px;
 }
 
 .dashboard {
@@ -422,7 +422,7 @@ body.logged-in .dashboard {
     align-items: center;
     gap: 8px;
     padding: 10px 18px;
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     border: 1px solid var(--border);
     background: rgba(255, 255, 254, 0.95);
     color: var(--text-strong);
@@ -462,7 +462,7 @@ body.logged-in .dashboard {
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: rgba(63, 143, 95, 0.1);
     color: var(--primary);
     font-size: 0.8rem;
@@ -481,7 +481,7 @@ body.logged-in .dashboard {
 .dash-controls {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
+    gap: 20px;
 }
 
 /* Make controls span full width so inner tab groups can stretch */
@@ -492,7 +492,7 @@ body.logged-in .dashboard {
 .input-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .input-group label {
@@ -525,63 +525,35 @@ body.logged-in .dashboard {
 .card-group {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 16px;
-    padding: 18px;
-    background: rgba(241, 249, 236, 0.36);
-    border-radius: var(--radius-md);
-    border: 1px solid rgba(137,173,146,0.18);
+    gap: 20px;
 }
 
 .card-group.single {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
-.stat-card {
+/* Shared Card Base */
+.financial-card,
+.stat-card,
+.metric-card {
     background: var(--surface-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     border: 1px solid rgba(137, 173, 146, 0.24);
-    padding: 20px 22px;
     box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: box-shadow 0.2s, transform 0.2s, opacity 0.25s cubic-bezier(.4,0,.2,1);
-    will-change: opacity, transform;
     color: var(--text-strong);
 }
 
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
+.stat-card {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.stat-card.primary {
-    --card-border: rgba(63, 143, 95, 0.48);
-    --card-bg-start: rgba(126, 214, 144, 0.38);
-    --card-bg-end: rgba(255, 255, 254, 0.9);
-    --card-value-color: var(--accent);
-}
-
-.stat-card.revenue {
-    --card-border: rgba(224, 178, 75, 0.5);
-    --card-bg-start: rgba(224, 178, 75, 0.3);
-    --card-bg-end: rgba(255, 248, 229, 0.92);
-    --card-value-color: var(--info);
-}
-
-.stat-card.cost {
-    --card-border: rgba(217, 119, 42, 0.5);
-    --card-bg-start: rgba(217, 119, 42, 0.26);
-    --card-bg-end: rgba(255, 245, 226, 0.9);
-    --card-value-color: var(--warn);
-}
-
-.stat-card.info {
-    --card-border: rgba(47, 95, 73, 0.46);
-    --card-bg-start: rgba(156, 196, 169, 0.32);
-    --card-bg-end: rgba(243, 250, 239, 0.92);
-    --card-value-color: var(--primary);
-}
+.stat-card.primary { --card-value-color: var(--accent); }
+.stat-card.revenue { --card-value-color: var(--info); }
+.stat-card.cost { --card-value-color: var(--warn); }
+.stat-card.info { --card-value-color: var(--primary); }
 
 .stat-card .stat-title {
     font-size: 0.75rem;
@@ -595,22 +567,7 @@ body.logged-in .dashboard {
     font-size: 1.45rem;
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: var(--text-strong);
-}
-
-.stat-card.primary,
-.stat-card.revenue,
-.stat-card.cost,
-.stat-card.info {
-    border-color: var(--card-border);
-    background: linear-gradient(150deg, var(--card-bg-start), var(--card-bg-end));
-}
-
-.stat-card.primary .stat-value,
-.stat-card.revenue .stat-value,
-.stat-card.cost .stat-value,
-.stat-card.info .stat-value {
-    color: var(--card-value-color);
+    color: var(--card-value-color, var(--text-strong));
 }
 
 .stat-card small {
@@ -618,20 +575,7 @@ body.logged-in .dashboard {
     color: var(--text-soft);
 }
 
-.stat-progress {
-    width: 100%;
-    height: 6px;
-    background: rgba(63, 143, 95, 0.18);
-    border-radius: 999px;
-    overflow: hidden;
-}
 
-.stat-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent-soft));
-    transition: width 0.32s cubic-bezier(.4,0,.2,1);
-    will-change: width;
-}
 
 /* Tabs */
 .tabs {
@@ -645,7 +589,7 @@ body.logged-in .dashboard {
     gap: 10px;
     background: rgba(255, 255, 254, 0.82);
     padding: 8px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-lg);
     border: 1px solid rgba(137,173,146,0.2);
     flex-wrap: wrap;
     width: 100%;
@@ -660,7 +604,7 @@ body.logged-in .dashboard {
     background: rgba(255, 255, 254, 0.82);
     padding: 6px;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     flex-wrap: wrap;
 }
 
@@ -671,10 +615,11 @@ body.logged-in .dashboard {
 .tab-btn,
 .basis-btn {
     flex: 1;
+
     border: none;
     background: transparent;
     font-weight: 600;
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     color: var(--text-muted);
     cursor: pointer;
     transition: background 0.2s cubic-bezier(.4,0,.2,1), color 0.2s cubic-bezier(.4,0,.2,1), transform 0.2s cubic-bezier(.4,0,.2,1), box-shadow 0.2s cubic-bezier(.4,0,.2,1);
@@ -705,7 +650,7 @@ body.logged-in .dashboard {
     background: rgba(63, 143, 95, 0.2);
     color: var(--text-strong);
     box-shadow: inset 0 0 0 1px rgba(63, 143, 95, 0.38);
-    transform: translateY(-1px);
+    transform: none;
 }
 
 .tab-content {
@@ -760,7 +705,7 @@ body.logged-in .dashboard {
 .sim-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 18px;
+    gap: 20px;
 }
 
 .slider-header {
@@ -794,7 +739,7 @@ input[type=range] {
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: rgba(126, 214, 144, 0.26);
     border: none;
 }
@@ -833,18 +778,18 @@ input[type=range]::-moz-range-thumb:hover {
 
 input[type=range]::-webkit-slider-runnable-track {
     height: 4px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
 }
 
 input[type=range]::-moz-range-track {
     height: 4px;
-    border-radius: 999px;
+    border-radius: 50px;
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
 }
 
 .advanced-banner {
-    margin: 24px 0 12px;
+    margin: 24px 0 16px;
     padding: 14px 16px;
     border: 1px dashed rgba(63, 143, 95, 0.28);
     background: rgba(126, 214, 144, 0.14);
@@ -873,7 +818,7 @@ input[type=range]::-moz-range-track {
     margin-top: 10px;
     align-self: flex-start;
     padding: 10px 16px;
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     border: 1px solid rgba(63, 143, 95, 0.45);
     background: rgba(126, 214, 144, 0.24);
     color: var(--accent);
@@ -901,7 +846,7 @@ input[type=range]::-moz-range-track {
 .farm-size-btn {
     border: 1px solid rgba(63, 143, 95, 0.34);
     background: rgba(255, 255, 254, 0.96);
-    border-radius: var(--radius-sm);
+    border-radius: 50px;
     padding: 12px;
     cursor: pointer;
     color: var(--text-muted);
@@ -1186,15 +1131,11 @@ input[type=range]::-moz-range-track {
 .financial-overview {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
 }
 
 .financial-card {
-    background: var(--surface-strong);
-    border-radius: var(--radius-lg);
-    border: 1px solid rgba(137, 173, 146, 0.24);
-    box-shadow: var(--shadow-sm);
-    padding: 24px;
+    padding: 32px;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 32px;
@@ -1287,17 +1228,14 @@ input[type=range]::-moz-range-track {
 .metrics-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 16px;
+    gap: 20px;
 }
 
 .metric-card {
-    background: rgba(255, 255, 254, 0.6);
-    border: 1px solid rgba(137, 173, 146, 0.18);
-    border-radius: var(--radius-md);
-    padding: 16px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
     text-align: center;
 }
 
