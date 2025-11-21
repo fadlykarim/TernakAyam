@@ -795,6 +795,7 @@ input[type=range]::-moz-range-track {
     border-radius: var(--radius-sm);
     color: var(--primary);
     font-weight: 500;
+    display: flex;
 }
 
 .advanced-grid {
