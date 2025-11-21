@@ -1699,6 +1699,12 @@ class ChickenCalc {
                 return;
             }
 
+            // Sort: Favorites first
+            history.sort((a, b) => {
+                if (a.is_favorite === b.is_favorite) return 0;
+                return a.is_favorite ? -1 : 1;
+            });
+
             let html = '<div style="max-height:400px;overflow-y:auto">';
             history.forEach(c => {
                 const date = new Date(c.calculation_date).toLocaleDateString('id-ID');
@@ -1707,29 +1713,29 @@ class ChickenCalc {
                 const icon = c.keuntungan_bersih > 0 ? iconUp : iconDown;
                 const col = c.keuntungan_bersih > 0 ? '#3F8F5F' : '#C8513A';
                 
-                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:#ed4956" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:#ed4956" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heart = c.is_favorite ? heartFilled : heartOutline;
                 
                 const modeBadge = c.is_advanced ? '<span class="history-tag">Advance</span>' : '';
                 const basisInfo = c.is_advanced && c.basis ? ` • Basis ${c.basis === 'carcass' ? 'karkas' : 'hidup'}` : '';
                 
                 html += `
-                    <div class="history-item" style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
+                    <div style="border:1px solid rgba(137,173,146,0.36);border-radius:8px;padding:12px;margin-bottom:8px;background:rgba(255,255,254,0.9)">
                         <div style="display:flex;justify-content:space-between;align-items:flex-start">
                             <div style="flex:1">
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#ed4956;padding:4px">${heart}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#ed4956">${heart}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
                                 <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
                                 ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem;margin-top:4px">"${c.notes}"</div>` : ''}
                             </div>
                             <div style="display:flex;flex-direction:column;gap:8px;margin-left:12px">
-                                <button class="btn-action accent btn-load" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem">Muat</button>
-                                <button class="btn-action ghost btn-del" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem;color:#C8513A;background:rgba(200,81,58,0.1)">Hapus</button>
+                                <button class="btn-action accent" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem">Muat</button>
+                                <button class="btn-action ghost" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem;color:#C8513A;background:rgba(200,81,58,0.1)">Hapus</button>
                             </div>
                         </div>
                     </div>
@@ -1752,90 +1758,61 @@ class ChickenCalc {
     }
 
     bindHistoryBtns() {
-        const modalBody = document.querySelector('.petok-modal-body');
-        if (!modalBody || modalBody.dataset.hasListeners) return;
-        
-        modalBody.dataset.hasListeners = 'true';
-
-        modalBody.addEventListener('click', async (e) => {
-            const btnFav = e.target.closest('.btn-fav');
-            const btnLoad = e.target.closest('.btn-load');
-            const btnDel = e.target.closest('.btn-del');
-
-            if (btnFav) {
-                e.stopPropagation();
-                e.preventDefault();
-                const target = btnFav;
+        document.querySelectorAll('.btn-fav').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const target = e.currentTarget;
                 const id = target.dataset.id;
-                
-                // Optimistic UI
-                const isFilled = target.innerHTML.includes('fill="currentColor"');
-                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                
-                target.innerHTML = isFilled ? heartOutline : heartFilled;
-
-                try {
-                    const sb = await getSb();
-                    const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
-                        calculation_id: id
-                    });
-                    if (error) throw error;
-                    
-                    // Sync with server state
-                    target.innerHTML = newStatus ? heartFilled : heartOutline;
-                } catch (error) {
+                const sb = await getSb();
+                const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
+                    calculation_id: id
+                });
+                if (error) {
                     console.error('Toggle favorite error:', error);
-                    target.innerHTML = isFilled ? heartFilled : heartOutline;
-                    this.notify('Gagal mengubah favorit', 'error');
+                    return;
                 }
-                return;
-            }
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:#ed4956" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:#ed4956" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                target.innerHTML = newStatus ? heartFilled : heartOutline;
+            });
+        });
 
-            if (btnLoad) {
-                const id = btnLoad.dataset.id;
-                try {
-                    const sb = await getSb();
-                    const { data: calc, error } = await sb
-                        .from('calculation_history')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
-                    
-                    if (error) throw error;
-                    if (calc) {
-                        this.loadCalc(calc);
-                        this.closeModal();
-                        this.notify('Loaded', 'success');
-                    }
-                } catch (error) {
+        document.querySelectorAll('.btn-load').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const id = e.target.dataset.id;
+                const sb = await getSb();
+                const { data: calc, error } = await sb
+                    .from('calculation_history')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                if (error) {
                     console.error('Load calculation error:', error);
-                    this.notify('Gagal memuat data', 'error');
+                    return;
                 }
-                return;
-            }
+                if (calc) {
+                    this.loadCalc(calc);
+                    this.closeModal();
+                    this.notify('Loaded', 'success');
+                }
+            });
+        });
 
-            if (btnDel) {
-                if (!confirm('Hapus riwayat ini?')) return;
-                const target = btnDel;
-                const id = target.dataset.id;
-                
-                try {
-                    const sb = await getSb();
-                    const { error } = await sb.rpc('delete_calculation', {
-                        calculation_id: id
-                    });
-                    if (error) throw error;
-                    
-                    const item = target.closest('.history-item');
-                    if (item) item.remove();
-                    this.notify('Terhapus', 'success');
-                } catch (error) {
+        document.querySelectorAll('.btn-del').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                if (!confirm('Hapus?')) return;
+                const id = e.target.dataset.id;
+                const sb = await getSb();
+                const { error } = await sb.rpc('delete_calculation', {
+                    calculation_id: id
+                });
+                if (error) {
                     console.error('Delete calculation error:', error);
-                    this.notify('Gagal menghapus', 'error');
+                    this.notify('Error', 'error');
+                    return;
                 }
-                return;
-            }
+                e.target.closest('div[style*="border:1px"]').remove();
+                this.notify('Deleted', 'success');
+            });
         });
     }
 
