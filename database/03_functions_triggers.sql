@@ -385,7 +385,7 @@ AS $$
     ch.basis
     FROM public.calculation_history ch
     WHERE ch.user_id = auth.uid()
-    ORDER BY ch.calculation_date DESC
+    ORDER BY ch.is_favorite DESC, ch.calculation_date DESC
     LIMIT limit_count
     OFFSET offset_count;
 $$;
