@@ -1737,8 +1737,8 @@ class ChickenCalc {
                                 ${c.notes ? `<div style="font-style:italic;color:#567a60;font-size:0.85rem;margin-top:4px">"${c.notes}"</div>` : ''}
                             </div>
                             <div style="display:flex;flex-direction:column;gap:8px;margin-left:12px">
-                                <button class="btn-action accent" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem">Muat</button>
-                                <button class="btn-action ghost" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem;color:#C8513A;background:rgba(200,81,58,0.1)">Hapus</button>
+                                <button class="btn-action accent btn-load" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem">Muat</button>
+                                <button class="btn-action ghost btn-del" data-id="${c.id}" style="padding:4px 10px;font-size:0.8rem;color:#C8513A;background:rgba(200,81,58,0.1)">Hapus</button>
                             </div>
                         </div>
                     </div>
@@ -1765,29 +1765,38 @@ class ChickenCalc {
             btn.addEventListener('click', async (e) => {
                 const target = e.currentTarget;
                 const id = target.dataset.id;
-                const sb = await getSb();
-                const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
-                    calculation_id: id
-                });
-                if (error) {
-                    console.error('Toggle favorite error:', error);
-                    return;
-                }
+                
+                // Optimistic UI update
+                const currentIcon = target.innerHTML;
                 const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                target.innerHTML = newStatus ? heartFilled : heartOutline;
                 
-                if (newStatus) {
-                    this.notify('Disematkan ke atas', 'success');
-                } else {
-                    this.notify('Dilepas dari sematan', 'info');
+                // Toggle visually first
+                const isFilled = currentIcon.includes('fill="currentColor"');
+                target.innerHTML = isFilled ? heartOutline : heartFilled;
+
+                try {
+                    const sb = await getSb();
+                    const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
+                        calculation_id: id
+                    });
+                    
+                    if (error) throw error;
+                    
+                    // Reload history to update sorting (pin behavior)
+                    await this.showHistory();
+                    
+                } catch (error) {
+                    console.error('Toggle favorite error:', error);
+                    target.innerHTML = currentIcon; // Revert on error
+                    this.notify('Gagal memfavoritkan', 'error');
                 }
             });
         });
 
         document.querySelectorAll('.btn-load').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                const id = e.target.dataset.id;
+                const id = e.currentTarget.dataset.id;
                 const sb = await getSb();
                 const { data: calc, error } = await sb
                     .from('calculation_history')
@@ -1809,7 +1818,7 @@ class ChickenCalc {
         document.querySelectorAll('.btn-del').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 if (!confirm('Hapus?')) return;
-                const id = e.target.dataset.id;
+                const id = e.currentTarget.dataset.id;
                 const sb = await getSb();
                 const { error } = await sb.rpc('delete_calculation', {
                     calculation_id: id
