@@ -1730,7 +1730,7 @@ class ChickenCalc {
                                 <div style="font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                                     <span>${c.chicken_type} - ${c.populasi} ekor</span>
                                     ${modeBadge}
-                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:#ed4956;padding:4px;display:flex;align-items:center;justify-content:center">${heart}</button>
+                                    <button class="btn-fav" data-id="${c.id}" style="background:none;border:none;cursor:pointer;color:${c.is_favorite ? '#1e88e5' : '#567a60'};padding:4px;display:flex;align-items:center;justify-content:center">${heart}</button>
                                 </div>
                                 <div style="font-size:0.85rem;color:#567a60;margin-top:4px">${date}${basisInfo}</div>
                                 <div style="font-weight:600;color:${col};display:flex;align-items:center;gap:6px;margin-top:4px">${icon} ${this.fmt(c.keuntungan_bersih)}</div>
@@ -1776,7 +1776,7 @@ class ChickenCalc {
                 const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
                 target.innerHTML = newStatus ? heartFilled : heartOutline;
-                this.notify(newStatus ? 'Ditambahkan ke favorit' : 'Dihapus dari favorit', 'success');
+                target.style.color = newStatus ? '#1e88e5' : '#567a60';
             });
         });
 
