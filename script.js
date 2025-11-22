@@ -1671,7 +1671,7 @@ class ChickenCalc {
         };
     }
 
-    async showHistory() {
+    async showHistory(isRefresh = false) {
         if (!this.checkAuth()) return;
 
         const loadingHtml = `
@@ -1681,7 +1681,15 @@ class ChickenCalc {
             </div>
         `;
         
-        this.modal('History', loadingHtml);
+        if (!isRefresh) {
+            this.modal('History', loadingHtml);
+        } else {
+            const modalBody = document.querySelector('.petok-modal-body');
+            if (modalBody) {
+                modalBody.style.opacity = '0.5';
+                modalBody.style.pointerEvents = 'none';
+            }
+        }
 
         try {
             const sb = await getSb();
@@ -1695,6 +1703,8 @@ class ChickenCalc {
                 const modalBody = document.querySelector('.petok-modal-body');
                 if (modalBody) {
                     modalBody.innerHTML = '<p style="text-align:center;padding:40px;color:#567a60">Belum ada history</p>';
+                    modalBody.style.opacity = '1';
+                    modalBody.style.pointerEvents = 'auto';
                 }
                 return;
             }
@@ -1749,6 +1759,8 @@ class ChickenCalc {
             const modalBody = document.querySelector('.petok-modal-body');
             if (modalBody) {
                 modalBody.innerHTML = html;
+                modalBody.style.opacity = '1';
+                modalBody.style.pointerEvents = 'auto';
             }
             this.bindHistoryBtns();
         } catch (e) {
@@ -1756,6 +1768,8 @@ class ChickenCalc {
             const modalBody = document.querySelector('.petok-modal-body');
             if (modalBody) {
                 modalBody.innerHTML = '<p style="text-align:center;color:#C8513A;padding:40px">Gagal memuat history</p>';
+                modalBody.style.opacity = '1';
+                modalBody.style.pointerEvents = 'auto';
             }
         }
     }
@@ -1784,7 +1798,7 @@ class ChickenCalc {
                     if (error) throw error;
                     
                     // Reload history to update sorting (pin behavior)
-                    await this.showHistory();
+                    await this.showHistory(true);
                     
                 } catch (error) {
                     console.error('Toggle favorite error:', error);
