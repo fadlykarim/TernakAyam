@@ -1761,84 +1761,60 @@ class ChickenCalc {
     }
 
     bindHistoryBtns() {
-        // Favorite toggle
         document.querySelectorAll('.btn-fav').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const target = e.currentTarget;
                 const id = target.dataset.id;
-                if (!id) return;
-                try {
-                    const sb = await getSb();
-                    const { data, error } = await sb.rpc('toggle_favorite_calculation', { calculation_id: id });
-                    if (error) throw error;
-
-                    // Determine new favorite state robustly
-                    let favored;
-                    if (typeof data === 'boolean') {
-                        favored = data;
-                    } else if (data && typeof data === 'object') {
-                        if ('is_favorite' in data) favored = !!data.is_favorite;
-                        else if ('new_status' in data) favored = !!data.new_status;
-                        else favored = !target.innerHTML.includes('fill="currentColor"');
-                    } else {
-                        // Fallback: invert current visual state
-                        favored = !target.innerHTML.includes('fill="currentColor"');
-                    }
-
-                    const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                    const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
-                    target.innerHTML = favored ? heartFilled : heartOutline;
-                    target.setAttribute('aria-pressed', favored ? 'true' : 'false');
-                    this.notify(favored ? 'Ditandai favorit' : 'Favorit dihapus', 'success');
-                } catch (err) {
-                    console.error('Toggle favorite error:', err);
-                    this.notify('Gagal update favorit', 'error');
+                const sb = await getSb();
+                const { data: newStatus, error } = await sb.rpc('toggle_favorite_calculation', {
+                    calculation_id: id
+                });
+                if (error) {
+                    console.error('Toggle favorite error:', error);
+                    return;
                 }
+                const heartOutline = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                const heartFilled = '<svg xmlns="http://www.w3.org/2000/svg" class="simple-icon" style="color:inherit" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>';
+                target.innerHTML = newStatus ? heartFilled : heartOutline;
             });
         });
 
-        // Load calculation
         document.querySelectorAll('.btn-load').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.dataset.id;
-                if (!id) return;
-                try {
-                    const sb = await getSb();
-                    const { data: calc, error } = await sb
-                        .from('calculation_history')
-                        .select('*')
-                        .eq('id', id)
-                        .single();
-                    if (error) throw error;
-                    if (calc) {
-                        this.loadCalc(calc);
-                        this.closeModal();
-                        this.notify('Perhitungan dimuat', 'success');
-                    }
-                } catch (err) {
-                    console.error('Load calculation error:', err);
-                    this.notify('Gagal memuat perhitungan', 'error');
+                const sb = await getSb();
+                const { data: calc, error } = await sb
+                    .from('calculation_history')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+                if (error) {
+                    console.error('Load calculation error:', error);
+                    return;
+                }
+                if (calc) {
+                    this.loadCalc(calc);
+                    this.closeModal();
+                    this.notify('Loaded', 'success');
                 }
             });
         });
 
-        // Delete calculation
         document.querySelectorAll('.btn-del').forEach(btn => {
             btn.addEventListener('click', async (e) => {
+                if (!confirm('Hapus?')) return;
                 const id = e.currentTarget.dataset.id;
-                if (!id) return;
-                if (!confirm('Hapus perhitungan ini?')) return;
-                try {
-                    const sb = await getSb();
-                    const { error } = await sb.rpc('delete_calculation', { calculation_id: id });
-                    if (error) throw error;
-                    const card = e.currentTarget.closest('div[style*="border:1px"]');
-                    if (card) card.remove();
-                    this.notify('History dihapus', 'success');
-                } catch (err) {
-                    console.error('Delete calculation error:', err);
-                    this.notify('Gagal menghapus', 'error');
+                const sb = await getSb();
+                const { error } = await sb.rpc('delete_calculation', {
+                    calculation_id: id
+                });
+                if (error) {
+                    console.error('Delete calculation error:', error);
+                    this.notify('Error', 'error');
+                    return;
                 }
+                e.currentTarget.closest('div[style*="border:1px"]').remove();
+                this.notify('Deleted', 'success');
             });
         });
     }
